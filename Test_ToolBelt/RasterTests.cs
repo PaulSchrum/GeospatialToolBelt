@@ -20,9 +20,9 @@ namespace Test_ToolBelt
 
         private void SetupAscFormatData()
         {
-            ascTestFileFullPath = Path.Combine(currentDirectory, ascTestFile);
             if (ascRaster is null)
             {
+                ascTestFileFullPath = Path.Combine(currentDirectory, ascTestFile);
                 ascRaster = Raster.Load(ascTestFileFullPath);
             }
             Assert.IsNotNull(ascRaster);
@@ -40,12 +40,18 @@ namespace Test_ToolBelt
             SetupAscFormatData();
             Assert.AreEqual(1, ascRaster.bands.Count);
 
-            double expected = 4474.663d;
-            double? actual = ascRaster.bands[0].CellArray[2, 3];
-
+            double expected = 4477.26d;
+            double? actual = ascRaster.bands[0].CellArray[0, 0];
             Assert.IsNotNull(actual);
             Assert.AreEqual(expected: expected, actual: (double) actual,
                 delta: 0.005);
+
+            expected = 4476.672d;
+            actual = ascRaster.bands[0].CellArray[1, 1];
+            Assert.IsNotNull(actual);
+            Assert.AreEqual(expected: expected, actual: (double)actual,
+                delta: 0.005);
+
         }
     }
 }

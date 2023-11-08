@@ -76,6 +76,7 @@ namespace GeoTBelt
 
                 string line;
                 int rowCounter = -1;
+                bool arrayCreated = false;
                 while (true)
                 {
                     line = sr.ReadLine();
@@ -91,10 +92,11 @@ namespace GeoTBelt
                             band.CellArray[columnCounter, rowCounter] = double.NaN;
                         else
                         {
-                            if(rowCounter == 0)
+                            if(!arrayCreated)
                             {
                                 band.CreateCellArray(numColumns, numRows);
                                 band.Type = numberParser(entry);
+                                arrayCreated = true;
                             }
                             if (band.Type == typeof(double))
                                 band.CellArray[columnCounter, rowCounter] = double.Parse(entry);
