@@ -8,9 +8,9 @@ namespace GeoTBelt
 {
     public class GTBpoint
     {
-        public double X { get; protected set; }
-        public double Y { get; protected set; }
-        public double Z { get; protected set; } = 0;
+        public double X { get; set; }
+        public double Y { get; set; }
+        public double Z { get; set; } = 0;
         public GTBpoint(double x, double y)
         {
             X = x;
