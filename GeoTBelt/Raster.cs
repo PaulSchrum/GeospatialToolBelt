@@ -12,7 +12,7 @@ namespace GeoTBelt
         public double topYCoordinate { get; protected set; }
         public Point anchorPoint { get; protected set; } // upper left point of the raster
         public string NoDataValue { get; protected set; }
-        public double[,] cellArray { get; protected set; }
+        public List<Band> bands { get; protected set; } = new List<Band>();
 
         private Raster() { }
 
