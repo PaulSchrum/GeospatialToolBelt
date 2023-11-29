@@ -167,6 +167,38 @@ namespace GeoTBelt
 
             return returnRaster;
         }
+
+        public void WriteASCRaster(string filePath)
+        {
+            using (StreamWriter writer = new StreamWriter(filePath))
+            {
+                writer.WriteLine("ncols         " + numColumns);
+                writer.WriteLine("nrows         " + numRows);
+                writer.WriteLine("xllcorner     " + leftXCoordinate);
+                writer.WriteLine("yllcorner     " + bottomYCoordinate);
+                writer.WriteLine("cellsize      " + cellSize);
+                writer.WriteLine("NODATA_value  " + NoDataValue);
+
+                writer.Write(this.bands[0].ToString());
+                //for (int currentRow = 0; currentRow < numRows; currentRow++)
+                //{
+                //    for (int currentColumn = 0; currentColumn < numColumns; currentColumn++)
+                //    {
+                //        if (this.bands[0].cellArray[currentRow, currentColumn] == double.NaN)
+                //        {
+                //            writer.Write(NoDataValue + " ");
+                //        }
+                //        else
+                //        {
+                //            string outValue = $"{cellArray[currentRow, currentColumn]:0.###} ";
+                //            writer.Write(outValue);
+                //        }
+                //    }
+                //    writer.WriteLine("");
+                //}
+                writer.Flush();
+            }
+        }
     }
 
 }
