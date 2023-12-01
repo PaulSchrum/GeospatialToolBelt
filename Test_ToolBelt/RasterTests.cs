@@ -1,4 +1,5 @@
 using GeoTBelt;
+using System.Linq;
 
 namespace Test_ToolBelt
 {
@@ -6,27 +7,47 @@ namespace Test_ToolBelt
     public class RasterTests
     {
         private static string currentDirectory;
-        private static string ascTestFile;
+        private static string ascTestFileName;
         private static string ascTestFileFullPath;
         private static Raster ascRaster;
         private static string ascOutputTestFile;
         private static string ascOutputTestFileFullPath;
 
+        private static Raster geoTiffRaster;
+        private static string geoTiffFileName;
+        private static string geoTiffFileFullPath;
+
         [ClassInitialize]
         public static void Initialize(TestContext context)
         {
-            ascTestFile = "TestData_00765413.asc";
+            currentDirectory = betterGetCurrentDirectory("Test_ToolBelt");
+            geoTiffFileName = "NCSU Biltmore Hall small uncomp.tif";
+            geoTiffFileFullPath = Path.Combine(currentDirectory, geoTiffFileName);
+            geoTiffRaster = Raster.Load(geoTiffFileFullPath);
+
+            ascTestFileName = "TestData_00765413.asc";
             ascOutputTestFile = "TestData_00765413_out.asc";
-            currentDirectory = Directory.GetCurrentDirectory();
             ascOutputTestFileFullPath = Path.Combine(currentDirectory, ascOutputTestFile);
 
             var pathAsList = currentDirectory.Split("\\").ToList();
             pathAsList = pathAsList.Take(pathAsList.Count - 3).ToList();
             currentDirectory = string.Join("\\", pathAsList);
-            ascTestFileFullPath = Path.Combine(currentDirectory, ascTestFile);
+            ascTestFileFullPath = Path.Combine(currentDirectory, ascTestFileName);
             ascRaster = Raster.Load(ascTestFileFullPath);
+
         }
 
+        private static string betterGetCurrentDirectory(string desiredDirectory)
+        {
+            var currDirList = Directory.GetCurrentDirectory().Split("\\").ToList();
+            while (currDirList.Last() != desiredDirectory)
+            {
+                currDirList.RemoveAt(currDirList.Count - 1);
+            }
+            return string.Join("\\", currDirList);
+        }
+
+        #region ASC format tests
         [TestMethod]
         public void ASC_PopulatesSingleBand() 
         {
@@ -62,6 +83,13 @@ namespace Test_ToolBelt
             double? actual = outputRaster.bands[0].CellArray[3, 3];
             Assert.AreEqual(expected: expected, actual: (double)actual,
                 delta: 0.005);
+        }
+        #endregion ASC format tests
+
+        [TestMethod]
+        public void GeoTiff_PopulatesMultiBand()
+        {
+            Assert.IsNotNull(geoTiffRaster);
         }
 
         [ClassCleanup]
