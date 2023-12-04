@@ -194,7 +194,6 @@ namespace GeoTBelt.GeoTiff
                 FieldValue[] value = tif.GetField(tag);
                 if (value != null)
                 {
-                    int holdHere = 4;
                     for (int j = 0; j < value.Length; j++)
                     {
                         sb.Append($"{tag.ToString()}   Type: ");
