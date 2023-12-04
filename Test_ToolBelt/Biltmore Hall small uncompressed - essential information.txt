@@ -1,0 +1,70 @@
+GeoTiff information in the Biltmore Hall file.
+
+
+cellSize  0.5
+
+numColumns  114
+
+numRows     74
+
+leftXCoordinate    2_095_680.0
+
+bottomYCoordinate  739_800.0
+
+topYCoordinate     739_837.0
+
+rightXCoordinate   2_095_737.0  (Not yet in class Raster)
+
+GTBpoint anchorPoint 
+   X  2_095_680.0
+   Y  739_837.0
+   Z  Undefined
+
+NoDataValue   "-1"  (String)
+
+bands    5
+
+/// End of current Raster class properties
+
+Pixel Type     unsigned char
+
+Pixel Depth    8 bit
+
+/// Spatial Reference
+Projected Coordinate System : NAD 1983 (2011) StatePlane North Carolina FIPS 3200 (US Feet)
+Projection: Lambert Conformal Conic
+WKID: 6543
+Authority: EPSG
+Linear Unit: (US Survey Feet (0.3048006096012192)
+False Easting: 2_000_000.0
+False Northing: 0.0
+Central Meridian: -79.0
+Standard Parallel 1: 34.33333333333334
+Standard Parallel 2: 36.16666666666666
+Latitude of Origin: 33.75
+
+Geographic Coordinate System: NAD 1983 (2011)
+WKID: EPSG 6318
+Datum: D NAD 1983 2011
+Spheroid: GRS 1980
+Semimajor Axis: 6_378_137.0
+Semiminor Axis: 6_356_752.314140356
+Inverse Flattening: 298.257222101
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
