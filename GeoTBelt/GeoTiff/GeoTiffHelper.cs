@@ -184,8 +184,6 @@ namespace GeoTBelt.GeoTiff
 
         private static List<string> GetAllTags(Tiff tif)
         {
-            Console.WriteLine();
-            Console.WriteLine("Hey Ho");
             var rList = new List<string>();
             StringBuilder sb = new StringBuilder();
             for (ushort t = ushort.MinValue; t < ushort.MaxValue; ++t)
