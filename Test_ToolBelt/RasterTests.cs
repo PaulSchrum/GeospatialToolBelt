@@ -20,7 +20,7 @@ namespace Test_ToolBelt
         [ClassInitialize]
         public static void Initialize(TestContext context)
         {
-            currentDirectory = betterGetCurrentDirectory("Test_ToolBelt");
+            currentDirectory = improvedGetCurrentDirectory("Test_ToolBelt");
             geoTiffFileName = "NCSU Biltmore Hall small uncomp.tif";
             geoTiffFileFullPath = Path.Combine(currentDirectory, geoTiffFileName);
             geoTiffRaster = Raster.Load(geoTiffFileFullPath);
@@ -37,7 +37,7 @@ namespace Test_ToolBelt
 
         }
 
-        private static string betterGetCurrentDirectory(string desiredDirectory)
+        private static string improvedGetCurrentDirectory(string desiredDirectory)
         {
             var currDirList = Directory.GetCurrentDirectory().Split("\\").ToList();
             while (currDirList.Last() != desiredDirectory)
