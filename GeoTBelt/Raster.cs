@@ -26,7 +26,7 @@ namespace GeoTBelt
         /// <param name="format"></param>
         /// <returns></returns>
         /// <exception cref="ArgumentException"></exception>
-        public static Raster Load(string fullPath, string format = null)
+        public static Raster Load(string fullPath, string format = "")
         {
             string fileType = format;
             if (string.IsNullOrEmpty(fileType))

@@ -101,53 +101,6 @@ namespace GeoTBelt.GeoTiff
                 returnRaster.NoDataValue = intermediateString
                     .Substring(0, intermediateString.Length - 1);
 
-
-                // Read the image into the memory buffer
-                //if (!image.ReadRGBAImage(width, height, raster))
-                //    throw new Exception("Could not read image.");
-
-                //value = image.GetField(TiffTag.CELLLENGTH);
-                //if (value != null)
-                //    returnRaster.cellSize = value[0].ToDouble();
-                //else if ((value = image.GetField(TiffTag.CELLWIDTH)) != null)
-                //    returnRaster.cellSize = value[0].ToDouble();
-                //else if ((value = image.GetField(TiffTag.XRESOLUTION)) != null)
-                //    returnRaster.cellSize = value[0].ToDouble();
-                //else if ((value = image.GetField(TiffTag.YRESOLUTION)) != null)
-                //    returnRaster.cellSize = value[0].ToDouble();
-
-                //Disable possible null invocation warning as this potential
-                //   is handled by the try/catch blocks.
-#pragma warning disable 8602
-                //try
-                //{
-                //    returnRaster.NoDataValue = imageGetFieldFromMultiple(image,
-                //        new List<TiffTag>
-                //        {   (TiffTag) TIFFTAG_GDAL_NODATA,
-                //            (TiffTag) TIFFTAG_GDAL_NODATA1,
-                //            (TiffTag) TIFFTAG_GDAL_NODATA2,
-                //            (TiffTag) TIFFTAG_GDAL_NODATA3,
-                //        }).ToString();
-                //}
-                //catch (Exception e)
-                //{ returnRaster.NoDataValue = String.Empty; }
-
-                //try
-                //{
-                //    returnRaster.cellSize = imageGetFieldFromMultiple(image,
-                //        new List<TiffTag>
-                //        { TiffTag.XRESOLUTION, TiffTag.YRESOLUTION,
-                //                          TiffTag.CELLLENGTH, TiffTag.CELLWIDTH,
-                //         }).ToDouble();
-                //}
-                //catch (Exception e)
-                //{ throw new Exception("File contains no cell resolution information."); }
-
-                // Technical Debt: Allow for anisotropic cell sizes.
-                //returnRaster.cellSizeY = (double)imageGetField(image, TiffTag.YRESOLUTION);
-
-#pragma warning restore 8602
-
             }
 
             return returnRaster;
@@ -182,29 +135,166 @@ namespace GeoTBelt.GeoTiff
             return null;
         }
 
-        private static List<string> GetAllTags(Tiff tif)
+        private static Dictionary<string, dynamic?> GetAllTags(Tiff tif)
         {
-            var rList = new List<string>();
-            StringBuilder sb = new StringBuilder();
+            Dictionary<string, dynamic?> returnDict = new Dictionary<string, dynamic?>();
+
+            #region diagnostics
+            //string newline = Environment.NewLine;
+            //StringBuilder debugSB = new StringBuilder("| ");
+            //var rList = new List<string>();
+            //StringBuilder sb = new StringBuilder();
+            //for (ushort t = ushort.MinValue; t < ushort.MaxValue; ++t)
+            //{
+            //    TiffTag tag = (TiffTag)t;
+            //    FieldValue[] value = tif.GetField(tag);
+            //    if (value != null)
+            //    {
+            //        for (int j = 0; j < value.Length; j++)
+            //        {
+            //            sb.Append($"{tag.ToString()}   Type: ");
+            //            sb.AppendLine(
+            //                $"{value[j].Value.GetType().ToString()},  {value[j].ToString()}");
+            //        }
+
+            //        string s = sb.ToString().Trim();
+            //        rList.Add(s);
+            //        debugSB.Append($"{s}{newline}| ");
+            //        sb.Clear();
+            //    }
+            //}
+            #endregion diagnostics
+
+            List<string> tagsInExistance = new List<string>();  // for diagnostics
+            List<string> tagsInTheFile = new List<string>();
+
+            List<GTBTifTag> retTags = new List<GTBTifTag>();
+            int noCount = 0; int yesCount = 0;
             for (ushort t = ushort.MinValue; t < ushort.MaxValue; ++t)
             {
-                TiffTag tag = (TiffTag)t;
-                FieldValue[] value = tif.GetField(tag);
-                if (value != null)
+                string localName = AllTags.Tag(t)?.IdString;
+                if(localName is null)
                 {
-                    for (int j = 0; j < value.Length; j++)
-                    {
-                        sb.Append($"{tag.ToString()}   Type: ");
-                        sb.AppendLine(
-                            $"{value[j].Value.GetType().ToString()},  {value[j].ToString()}");
-                    }
-
-                    string s = sb.ToString().Trim();
-                    rList.Add(s);
-                    sb.Clear();
+                    noCount++;
+                    continue;
                 }
+                else
+                {
+                    yesCount++;
+                }
+
+                tagsInExistance.Add( localName );
+
+                bool tagIsInTheFile = GTBTifTag.IsThere(tif, t);
+                if ( tagIsInTheFile )
+                {
+                    tagsInTheFile.Add(localName);
+                }
+
             }
-            return rList;
+
+            returnDict["ImageWidth"] = tif.GetAsInt("ImageWidth");
+            returnDict["ImageLength"] = tif.GetAsInt("ImageLength");
+
+            //"BitsPerSample"
+            returnDict["BitsPerSample"] = tif.GetAsInt("BitsPerSample");
+
+            //"Compression"   // Do this one later.
+
+            //"PhotometricInterpretation"
+            //"StripOffsets"
+
+            //"SamplesPerPixel"
+            returnDict["SamplesPerPixel"] = tif.GetAsInt("SamplesPerPixel");
+
+
+            //"StripByteCounts"
+            //"PlanarConfiguration"
+            //"TileWidth"
+            //"TileLength"
+            //"TileOffsets"
+            //"TileByteCounts"
+            //"ExtraSamples"
+            //"SampleFormat"
+
+            //"ModelPixelScaleTag"
+            returnDict["ModelPixelScaleTag"] = tif.GetAsDoubleArray("ModelPixelScaleTag");
+
+            //"ModelTiepointTag"
+            //"GeoKeyDirectoryTag"
+            //"GeoDoubleParamsTag"
+            //"GeoAsciiParamsTag"
+            //"GDAL_METADATA"
+
+            //"GDAL_NODATA"
+            returnDict["GDAL_NODATA"] = tif.GetAsInt("GDAL_NODATA");
+
+            return returnDict;
+        }
+
+        private static void ExploreTiff(Tiff tif, string varName)
+        {
+            int id = AllTags.Tag(varName).IdInteger;
+            FieldValue[] value = tif.GetField((TiffTag)id);
+
+            Byte[] bytes;
+            if (value != null && value.Length > 1 && value[1].Value is byte[])
+            {
+                bytes = (byte[])value[1].Value;
+            }
+            else
+            {
+                // Handle the case where the expected data is not present
+            }
+        }
+
+
+    }
+
+    public static class TifExtensionMethods
+    {
+        public static int? GetAsInt(this  Tiff tif, string varName)
+        {
+            int id = AllTags.Tag(varName).IdInteger;
+            FieldValue[] value = tif.GetField((TiffTag)id);
+
+            if (value is null) return null;
+            return (value[0]).ToInt();
+        }
+
+        public static string? GetAsString(this Tiff tif, string varName)
+        {
+            int id = AllTags.Tag(varName).IdInteger;
+            FieldValue[] value = tif.GetField((TiffTag)id);
+            if (value is null) return null;
+            return (value[0]).ToString();
+        }
+
+        public static double[]? GetAsDoubleArray(this Tiff tif, string varName)
+        {
+            int id = AllTags.Tag(varName).IdInteger;
+            FieldValue[] value = tif.GetField((TiffTag)id);
+
+            if (value is null) return null;
+
+            int arraySize = value[0].ToInt();
+
+            Byte[] byteArray;
+            if (value != null && value.Length > 1 && value[1].Value is byte[])
+            {
+                byteArray = (byte[])value[1].Value;
+
+                List<double> accumulator = new List<double>();
+                int itemSize = sizeof(double);
+                for (int i = 0; i < arraySize; i++)
+                {
+                    accumulator.Add(
+                        BitConverter.ToDouble(byteArray, i * itemSize));
+                }
+                return accumulator.ToArray();
+            }
+
+            return null;
         }
     }
 }
