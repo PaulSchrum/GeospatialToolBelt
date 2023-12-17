@@ -88,7 +88,8 @@ namespace GeoTBelt.GeoTiff
                 _tagsByString = new Dictionary<string, TiffTagInfo>();
                 foreach (var entry in tempTagList)
                 {
-                    _tagsByString[entry.IdString] = entry;
+                    if(!_tagsByString.ContainsKey(entry.IdString))
+                        _tagsByString[entry.IdString] = entry;
                 }
                 if (_tagsByInt is not null)
                 {
@@ -104,7 +105,6 @@ namespace GeoTBelt.GeoTiff
 
         private static List<TiffTagInfo> tempTagList = new List<TiffTagInfo>
         {
-            // 
             { new TiffTagInfo {IdInteger = 254, IdString = "NewSubfileType", ShortDescription = "A general indication of the kind of data contained in this subfile." , SourceOfTag = " Baseline" , Note = "Usage rule in JHOVE TIFF module." } },
             { new TiffTagInfo {IdInteger = 255, IdString = "SubfileType", ShortDescription = "A general indication of the kind of data contained in this subfile." , SourceOfTag = " Baseline" , Note = " " } },
             { new TiffTagInfo {IdInteger = 256, IdString = "ImageWidth", ShortDescription = "The number of columns in the image, i.e., the number of pixels per row." , SourceOfTag = " Baseline" , Note = "Mandatory for TIFF 6.0 classes B, G, P, R, and Y.1" } },

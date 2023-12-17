@@ -1,4 +1,6 @@
 ﻿using BitMiracle.LibTiff.Classic;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Text;
 using static System.Net.Mime.MediaTypeNames;
 
@@ -166,7 +168,9 @@ namespace GeoTBelt.GeoTiff
             #endregion diagnostics
 
             List<string> tagsInExistance = new List<string>();  // for diagnostics
-            List<string> tagsInTheFile = new List<string>();
+
+            #region WhatAllTagsAreInThisFile
+            var tagsInTheFile = new Dictionary<int, string>();
 
             List<GTBTifTag> retTags = new List<GTBTifTag>();
             int noCount = 0; int yesCount = 0;
@@ -188,15 +192,17 @@ namespace GeoTBelt.GeoTiff
                 bool tagIsInTheFile = GTBTifTag.IsThere(tif, t);
                 if ( tagIsInTheFile )
                 {
-                    tagsInTheFile.Add(localName);
+                    tagsInTheFile[t] = localName;
                 }
 
             }
+            #endregion WhatAllTagsAreInThisFile
 
-            returnDict["ImageWidth"] = tif.GetAsInt("ImageWidth");
-            returnDict["ImageLength"] = tif.GetAsInt("ImageLength");
+            returnDict["ImageWidth"] = tif.GetAsInt("ImageWidth"); // column count
+            returnDict["ImageLength"] = tif.GetAsInt("ImageLength"); // row count
 
-            //"BitsPerSample"
+            //"BitsPerSample"  Bit depth, limiting the type. For example, 8 bit
+            //     means the type is byte. 16 bit means the type is ushort. etc.
             returnDict["BitsPerSample"] = tif.GetAsInt("BitsPerSample");
 
             //"Compression"   // Do this one later.
@@ -204,7 +210,7 @@ namespace GeoTBelt.GeoTiff
             //"PhotometricInterpretation"
             //"StripOffsets"
 
-            //"SamplesPerPixel"
+            //"SamplesPerPixel" The number of bands. (Surprise, ain't it.)
             returnDict["SamplesPerPixel"] = tif.GetAsInt("SamplesPerPixel");
 
 
@@ -217,17 +223,63 @@ namespace GeoTBelt.GeoTiff
             //"ExtraSamples"
             //"SampleFormat"
 
-            //"ModelPixelScaleTag"
+            #region Geospaital tags
+            //"ModelPixelScaleTag"  Pixel height and width (and depth) in
+            //      the original units and crs.
+            // Type: double[]
+            // value[0, 1, 2] contain pixel height, width, and depth.
             returnDict["ModelPixelScaleTag"] = tif.GetAsDoubleArray("ModelPixelScaleTag");
 
-            //"ModelTiepointTag"
+            //"ModelTiepointTag" Anchor point in the original units and crs.
+            // Type: double[]
+            // value[3, 4, 5] contain anchor xyz or lat/long/elev.
+            returnDict["ModelTiepointTag"] = tif.GetAsDoubleArray("ModelTiepointTag");
+
             //"GeoKeyDirectoryTag"
+            // Foundational spec at The Open Geospatial Consortium,
+            //     http://www.opengeospatial.org/standards/geotiff
+            //      Section 7.1.1 and following. Also see the bottom of this file.
+            //      Further,
+            // See http://geotiff.maptools.org/spec/geotiff2.4.html to understand this.
+            // For more on this mess of bear skins and stone knives, see
+            //      2.7.3 Cookbook for Geocoding Data
+            //      at http://geotiff.maptools.org/spec/geotiff2.7.html#2.7
+
+            int numColumns = 4;
+            var geoTagKeys = tif.GetAsShortArray("GeoKeyDirectoryTag");
+            int totalRowCount = geoTagKeys.Length / numColumns;
+            var GeoKey_directory_Version = geoTagKeys[0];
+            var majorRevision = geoTagKeys[1];  // key major revision number
+            var minorRevision = geoTagKeys[2]; // key minor revision number
+            var numKeysToFollow = geoTagKeys[3];  // number of keys following (4-column rows)
+
+            List<dynamic> GeoKeyThingies = new List<dynamic>();
+
+            for(int i = numColumns; i< geoTagKeys.Length; i+=4)
+            {
+                var keyID = geoTagKeys[i + 0];
+                var TIFFTagLocation = geoTagKeys[i + 1];
+                var count = geoTagKeys[i + 2];
+                var value_Offset = geoTagKeys[i + 3];
+                GeoKeyThingies.Add(new { 
+                    keyID = keyID,  field2=TIFFTagLocation, field3=count,
+                    field4 = value_Offset });
+            }
+
+
+            ExploreTiff(tif, "GeoKeyDirectoryTag");
+            //returnDict["GeoKeyDirectoryTag"]
+
             //"GeoDoubleParamsTag"
             //"GeoAsciiParamsTag"
-            //"GDAL_METADATA"
+
+            //"GDAL_METADATA"  string type.
+            returnDict["GDAL_METADATA"] = tif.GetAsString("GDAL_METADATA");
+            var vvvvv = tif.GetField(TIFFTAG_GEOKEYS).GetType();
 
             //"GDAL_NODATA"
             returnDict["GDAL_NODATA"] = tif.GetAsInt("GDAL_NODATA");
+            #endregion Geospaital tags
 
             return returnDict;
         }
@@ -236,6 +288,10 @@ namespace GeoTBelt.GeoTiff
         {
             int id = AllTags.Tag(varName).IdInteger;
             FieldValue[] value = tif.GetField((TiffTag)id);
+
+            var internalLength = value[0];
+            var testString = value[1]; //.ToString();
+            var ljl = value.GetType(); // .ToString();
 
             Byte[] bytes;
             if (value != null && value.Length > 1 && value[1].Value is byte[])
@@ -253,7 +309,7 @@ namespace GeoTBelt.GeoTiff
 
     public static class TifExtensionMethods
     {
-        public static int? GetAsInt(this  Tiff tif, string varName)
+        public static int? GetAsInt(this Tiff tif, string varName)
         {
             int id = AllTags.Tag(varName).IdInteger;
             FieldValue[] value = tif.GetField((TiffTag)id);
@@ -266,8 +322,37 @@ namespace GeoTBelt.GeoTiff
         {
             int id = AllTags.Tag(varName).IdInteger;
             FieldValue[] value = tif.GetField((TiffTag)id);
+
             if (value is null) return null;
-            return (value[0]).ToString();
+            // string diagnosticString = value[1].ToString();
+            return (value[1]).ToString();
+        }
+
+        public static short[]? GetAsShortArray(this Tiff tif, string varName)
+        {
+            int id = AllTags.Tag(varName).IdInteger;
+            FieldValue[] value = tif.GetField((TiffTag)id);
+
+            if (value is null) return null;
+
+            int arraySize = value[0].ToInt();
+
+            Byte[] byteArray;
+            if (value != null && value.Length > 1 && value[1].Value is byte[])
+            {
+                byteArray = (byte[])value[1].Value;
+
+                List<short> accumulator = new List<short>();
+                int itemSize = sizeof(short);
+                for (int i = 0; i < arraySize; i++)
+                {
+                    accumulator.Add(
+                        BitConverter.ToInt16(byteArray, i * itemSize));
+                }
+                return accumulator.ToArray();
+            }
+
+            return null;
         }
 
         public static double[]? GetAsDoubleArray(this Tiff tif, string varName)
@@ -298,3 +383,21 @@ namespace GeoTBelt.GeoTiff
         }
     }
 }
+
+
+/// Important text from https://docs.ogc.org/is/19-008r4/19-008r4.html
+/// Section 7.1.2 about the GeoKeyDirectoryTag
+/// A GeoTIFF file stores projection parameters in a set of "Keys" which are 
+/// virtually identical in function to a TIFF tag, but have one more level of 
+/// abstraction above TIFF. Like a tag, a Key has an ID number ranging from 0 
+/// to 65535, but unlike TIFF tags, all key ID’s are available for use in 
+/// GeoTIFF parameter definitions.
+/// 
+/// The Keys in GeoTIFF (also called "GeoKeys") are all referenced from the 
+/// GeoKeyDirectoryTag tag.
+/// 
+
+
+
+
+
