@@ -77,19 +77,19 @@ namespace GeoTBelt.GeoTiff
         {
             Raster returnRaster = null;
 
-            using (Tiff image = Tiff.Open(fileToOpen, "r"))
+            using (Tiff tifData = Tiff.Open(fileToOpen, "r"))
             {
-                if (image == null) throw new Exception("Could not open file.");
+                if (tifData == null) throw new Exception("Could not open file.");
 
-                var tags = GetAllTags(image);
+                var tags = GetAllTags(tifData);
 
                 returnRaster = new Raster();
 
-                FieldValue[] value = image.GetField(TiffTag.IMAGEWIDTH);
+                FieldValue[] value = tifData.GetField(TiffTag.IMAGEWIDTH);
                 int width = value[0].ToInt();
                 returnRaster.numColumns = width;
 
-                value = image.GetField(TiffTag.IMAGELENGTH);
+                value = tifData.GetField(TiffTag.IMAGELENGTH);
                 int height = value[0].ToInt();
                 returnRaster.numRows = height;
 
@@ -98,7 +98,7 @@ namespace GeoTBelt.GeoTiff
                 Console.WriteLine($"ht: {height}    wd: {width}.");
                 int[] raster = new int[imageSize];
 
-                value = image.GetField(TIFFTAG_GDAL_NODATA);
+                value = tifData.GetField(TIFFTAG_GDAL_NODATA);
                 string intermediateString = value[1].ToString();
                 returnRaster.NoDataValue = intermediateString
                     .Substring(0, intermediateString.Length - 1);
@@ -206,24 +206,41 @@ namespace GeoTBelt.GeoTiff
             returnDict["BitsPerSample"] = tif.GetAsInt("BitsPerSample");
 
             //"Compression"   // Do this one later.
+            returnDict["Compression"] = tif.GetAsShort("Compression");
 
             //"PhotometricInterpretation"
+            // ExploreTiff(tif, "Compression");
+            returnDict["PhotometricInterpretation"] = 
+                tif.GetAsShort("PhotometricInterpretation");
+
             //"StripOffsets"
+            returnDict["StripOffsets"] = 
+                tif.GetAsLongArray("StripOffsets");
+
+            returnDict["StripByteCounts"] = tif.GetAsLongArray("StripByteCounts");
+
+            returnDict["RowsPerStrip"] = tif.GetAsShort("RowsPerStrip");
 
             //"SamplesPerPixel" The number of bands. (Surprise, ain't it.)
             returnDict["SamplesPerPixel"] = tif.GetAsInt("SamplesPerPixel");
 
-
-            //"StripByteCounts"
             //"PlanarConfiguration"
-            //"TileWidth"
-            //"TileLength"
-            //"TileOffsets"
-            //"TileByteCounts"
-            //"ExtraSamples"
-            //"SampleFormat"
+            returnDict["PlanarConfiguration"] = tif
+                .GetAsShort("PlanarConfiguration");
 
-            #region Geospaital tags
+            ExploreTiff(tif, "TileWidth"); // start here.
+            returnDict["TileWidth"] = tif.GetAsShort("TileWidth");
+            returnDict["TileLength"] = tif.GetAsShort("TileLength");
+            //"TileOffsets"
+            returnDict["TileOffsets"] = tif.GetAsLongArray("TileOffsets");
+            //"TileByteCounts"
+            returnDict["TileByteCounts"] = tif.GetAsLongArray("TileByteCounts");
+            //"ExtraSamples"
+            returnDict["ExtraSamples"] = tif.GetAsShort("ExtraSamples");
+            //"SampleFormat"
+            returnDict["SampleFormat"] = tif.GetAsShort("SampleFormat");
+
+            #region Geospatial tags
             //"ModelPixelScaleTag"  Pixel height and width (and depth) in
             //      the original units and crs.
             // Type: double[]
@@ -246,25 +263,31 @@ namespace GeoTBelt.GeoTiff
             //      at http://geotiff.maptools.org/spec/geotiff2.7.html#2.7
 
             int numColumns = 4;
+            int numberOfKeys = 0;
             var geoTagKeys = tif.GetAsShortArray("GeoKeyDirectoryTag");
-            int totalRowCount = geoTagKeys.Length / numColumns;
-            var GeoKey_directory_Version = geoTagKeys[0];
-            var majorRevision = geoTagKeys[1];  // key major revision number
-            var minorRevision = geoTagKeys[2]; // key minor revision number
-            var numKeysToFollow = geoTagKeys[3];  // number of keys following (4-column rows)
-
-            List<dynamic> GeoKeyThingies = new List<dynamic>();
-
-            for(int i = numColumns; i< geoTagKeys.Length; i+=4)
+            if(geoTagKeys is not null)
             {
-                var keyID = geoTagKeys[i + 0];
-                var TIFFTagLocation = geoTagKeys[i + 1];
-                var count = geoTagKeys[i + 2];
-                var value_Offset = geoTagKeys[i + 3];
-                GeoKeyThingies.Add(new { 
-                    keyID = keyID,  field2=TIFFTagLocation, field3=count,
-                    field4 = value_Offset });
+                numberOfKeys = geoTagKeys.Length;
+                int totalRowCount = numberOfKeys / numColumns;
+                var GeoKey_directory_Version = geoTagKeys[0];
+                var majorRevision = geoTagKeys[1];  // key major revision number
+                var minorRevision = geoTagKeys[2]; // key minor revision number
+                var numKeysToFollow = geoTagKeys[3];  // number of keys following (4-column rows)
+
+                List<dynamic> GeoKeyThingies = new List<dynamic>();
+
+                for(int i = numColumns; i< geoTagKeys.Length; i+=4)
+                {
+                    var keyID = geoTagKeys[i + 0];
+                    var TIFFTagLocation = geoTagKeys[i + 1];
+                    var count = geoTagKeys[i + 2];
+                    var value_Offset = geoTagKeys[i + 3];
+                    GeoKeyThingies.Add(new { 
+                        keyID = keyID,  field2=TIFFTagLocation, field3=count,
+                        field4 = value_Offset });
+                }
             }
+
 
 
             ExploreTiff(tif, "GeoKeyDirectoryTag");
@@ -275,11 +298,16 @@ namespace GeoTBelt.GeoTiff
 
             //"GDAL_METADATA"  string type.
             returnDict["GDAL_METADATA"] = tif.GetAsString("GDAL_METADATA");
-            var vvvvv = tif.GetField(TIFFTAG_GEOKEYS).GetType();
+            var vvvvv = tif.GetField(TIFFTAG_GEOKEYS)?.GetType();
 
             //"GDAL_NODATA"
-            returnDict["GDAL_NODATA"] = tif.GetAsInt("GDAL_NODATA");
-            #endregion Geospaital tags
+            returnDict["GDAL_NODATA"] = tif.GetAsString("GDAL_NODATA").Trim();
+
+            #endregion Geospatial tags
+
+            HashSet<string> tagsInFileHS = new HashSet<string>(tagsInTheFile.Values);
+            HashSet<string> tagIHaveReadSoFar = new HashSet<string>(returnDict.Keys);
+            var InFileButNotReadYet = tagsInFileHS.Except(tagIHaveReadSoFar);
 
             return returnDict;
         }
@@ -288,6 +316,7 @@ namespace GeoTBelt.GeoTiff
         {
             int id = AllTags.Tag(varName).IdInteger;
             FieldValue[] value = tif.GetField((TiffTag)id);
+            if(value is null) return;
 
             var internalLength = value[0];
             var testString = value[1]; //.ToString();
@@ -309,6 +338,15 @@ namespace GeoTBelt.GeoTiff
 
     public static class TifExtensionMethods
     {
+        public static short? GetAsShort(this Tiff tif, string varName)
+        {
+            int id = AllTags.Tag(varName).IdInteger;
+            FieldValue[] value = tif.GetField((TiffTag)id);
+
+            if (value is null) return null;
+            return (value[0]).ToShort();
+        }
+
         public static int? GetAsInt(this Tiff tif, string varName)
         {
             int id = AllTags.Tag(varName).IdInteger;
@@ -326,6 +364,15 @@ namespace GeoTBelt.GeoTiff
             if (value is null) return null;
             // string diagnosticString = value[1].ToString();
             return (value[1]).ToString();
+        }
+
+        public static double? GetAsDouble(this Tiff tif, string varName)
+        {
+            int id = AllTags.Tag(varName).IdInteger;
+            FieldValue[] value = tif.GetField((TiffTag)id);
+
+            if (value is null) return null;
+            return (value[0]).ToDouble();
         }
 
         public static short[]? GetAsShortArray(this Tiff tif, string varName)
@@ -375,6 +422,37 @@ namespace GeoTBelt.GeoTiff
                 {
                     accumulator.Add(
                         BitConverter.ToDouble(byteArray, i * itemSize));
+                }
+                return accumulator.ToArray();
+            }
+
+            return null;
+        }
+        public static long[]? GetAsLongArray(this Tiff tif, string varName)
+        {
+            int id = AllTags.Tag(varName).IdInteger;
+            FieldValue[] value = tif.GetField((TiffTag)id);
+
+            if (value is null || value.Length == 0) return null;
+
+            if(value.Length == 1)
+                return value[0].Value as long[];
+
+
+            // Untested code below here.
+            int arraySize = value[0].ToInt();
+
+            Byte[] byteArray;
+            if (value != null && value.Length > 1 && value[1].Value is byte[])
+            {
+                byteArray = (byte[])value[1].Value;
+
+                List<long> accumulator = new List<long>();
+                int itemSize = sizeof(long);
+                for (int i = 0; i < arraySize; i++)
+                {
+                    accumulator.Add(
+                        BitConverter.ToInt64(byteArray, i * itemSize));
                 }
                 return accumulator.ToArray();
             }

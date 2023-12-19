@@ -6,7 +6,9 @@ namespace GeoTBelt
 {
     public class Raster
     {
-        public double cellSize { get; internal set; }  // Technical Debt: Need isomorphic cell sizes.
+        public double cellSize { get; internal set; }
+        public double? cellSizeX { get; internal set; } = default(double?);
+        public double? cellSizeY { get; internal set; } = default(double?);
         public int numColumns { get; internal set; }
         public int numRows { get; internal set; }
         public double leftXCoordinate { get; internal set; }

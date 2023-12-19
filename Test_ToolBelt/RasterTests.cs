@@ -21,7 +21,8 @@ namespace Test_ToolBelt
         public static void Initialize(TestContext context)
         {
             currentDirectory = improvedGetCurrentDirectory("Test_ToolBelt");
-            geoTiffFileName = "NCSU Biltmore Hall small uncomp.tif";
+            // geoTiffFileName = "NCSU Biltmore Hall small uncomp.tif";
+            geoTiffFileName = "TestData_00765413_uncompressed.tif";
             geoTiffFileFullPath = Path.Combine(currentDirectory, geoTiffFileName);
             geoTiffRaster = Raster.Load(geoTiffFileFullPath);
 
@@ -87,7 +88,7 @@ namespace Test_ToolBelt
         #endregion ASC format tests
 
         [TestMethod]
-        public void GeoTiff_PopulatesMultiBand()
+        public void GeoTiff_PopulatesSingleBand()
         {
             Assert.IsNotNull(geoTiffRaster);
         }
