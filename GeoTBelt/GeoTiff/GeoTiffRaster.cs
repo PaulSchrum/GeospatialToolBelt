@@ -20,7 +20,7 @@ namespace GeoTBelt.GeoTiff
 
 
 
-        #region PhotogrametricInterpretation Values
+        #region PhotometricInterpretation Values
         public static short PI_WhiteIsZero { get { return 0; } }
         public static short PI_BlackIsZero { get { return 1; } }
         public static short PI_RGB { get { return 2; } }
@@ -30,7 +30,7 @@ namespace GeoTBelt.GeoTiff
         public static short PI_YCbCr { get { return 6; } }
         public static short PI_ICCLab { get { return 7; } }
         public static short PI_CIELab { get { return 8; } }
-        #endregion PhotogrammetricInterpretation Values
+        #endregion PhotometricInterpretation Values
 
         #region SampleFormat
         public static short SF_UnsignedInteger { get { return 1; } }

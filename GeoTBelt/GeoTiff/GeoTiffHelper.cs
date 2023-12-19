@@ -228,7 +228,6 @@ namespace GeoTBelt.GeoTiff
             returnDict["PlanarConfiguration"] = tif
                 .GetAsShort("PlanarConfiguration");
 
-            ExploreTiff(tif, "TileWidth"); // start here.
             returnDict["TileWidth"] = tif.GetAsShort("TileWidth");
             returnDict["TileLength"] = tif.GetAsShort("TileLength");
             //"TileOffsets"
@@ -288,9 +287,7 @@ namespace GeoTBelt.GeoTiff
                 }
             }
 
-
-
-            ExploreTiff(tif, "GeoKeyDirectoryTag");
+            //ExploreTiff(tif, "GeoKeyDirectoryTag");
             //returnDict["GeoKeyDirectoryTag"]
 
             //"GeoDoubleParamsTag"
