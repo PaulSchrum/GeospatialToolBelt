@@ -12,6 +12,7 @@ namespace GeoTBelt
         public int numColumns { get; internal set; }
         public int numRows { get; internal set; }
         public double leftXCoordinate { get; internal set; }
+        public double rightXCoordinate { get; internal set; }
         public double bottomYCoordinate { get; internal set; }
         public double topYCoordinate { get; internal set; }
         public GTBpoint anchorPoint { get; internal set; } // upper left point of the raster
