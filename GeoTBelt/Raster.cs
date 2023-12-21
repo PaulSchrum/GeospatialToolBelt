@@ -59,6 +59,7 @@ namespace GeoTBelt
         public double topYCoordinate { get; internal set; }
         public GTBpoint anchorPoint { get; internal set; } // upper left point of the raster
         public string NoDataValue { get; internal set; }
+        public CellDataTypeEnum CellDataType { get; internal set; } = CellDataTypeEnum.Unknown;
         public List<Band> bands { get; internal set; } = new List<Band>();
 
 

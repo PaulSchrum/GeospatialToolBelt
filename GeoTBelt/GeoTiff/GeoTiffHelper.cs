@@ -85,7 +85,7 @@ namespace GeoTBelt.GeoTiff
 
                 returnRaster = new GeoTiffRaster();
 
-                #region raster items
+                #region raster base class items
                 int width = tags["ImageWidth"];
                 returnRaster.numColumns = width;
 
@@ -123,11 +123,18 @@ namespace GeoTBelt.GeoTiff
                 // The tech debt here is that we have not implemented sidecar or
                 // ModelTransformationTag yet.
 
+                returnRaster.anchorPoint = new GTBpoint(tpWorldX, tpWorldY);
                 returnRaster.leftXCoordinate = tpWorldX;
                 returnRaster.topYCoordinate = tpWorldY;
+                returnRaster.rightXCoordinate = tpWorldX + 
+                    returnRaster.cellSizeX * returnRaster.numColumns;
+                returnRaster.bottomYCoordinate = tpWorldY -
+                    returnRaster.cellSizeY * returnRaster.numRows;
+                #endregion raster base class items
 
-                #endregion raster items
+                #region GeoTiffRaster items
 
+                #endregion GeoTiffRaster items
 
 
             }
