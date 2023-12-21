@@ -18,6 +18,7 @@ namespace GeoTBelt.GeoTiff
         public dynamic TileByteCounts { get; internal set; }
         public dynamic SampleFormat { get; internal set; }
 
+        internal GeoTiffRaster() { }
 
 
         #region PhotometricInterpretation Values

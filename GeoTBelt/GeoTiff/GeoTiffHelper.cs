@@ -83,14 +83,13 @@ namespace GeoTBelt.GeoTiff
 
                 var tags = GetAllTags(tifData);
 
-                returnRaster = new Raster();
+                returnRaster = new GeoTiffRaster();
 
-                FieldValue[] value = tifData.GetField(TiffTag.IMAGEWIDTH);
-                int width = value[0].ToInt();
+                #region raster items
+                int width = tags["ImageWidth"];
                 returnRaster.numColumns = width;
 
-                value = tifData.GetField(TiffTag.IMAGELENGTH);
-                int height = value[0].ToInt();
+                int height = tags["ImageLength"];
                 returnRaster.numRows = height;
 
                 int imageSize = height * width;
@@ -98,10 +97,38 @@ namespace GeoTBelt.GeoTiff
                 Console.WriteLine($"ht: {height}    wd: {width}.");
                 int[] raster = new int[imageSize];
 
-                value = tifData.GetField(TIFFTAG_GDAL_NODATA);
-                string intermediateString = value[1].ToString();
-                returnRaster.NoDataValue = intermediateString
-                    .Substring(0, intermediateString.Length - 1);
+                string NoDataString = tags["GDAL_NODATA"];
+                if(NoDataString is not null)
+                    returnRaster.NoDataValue = NoDataString.Trim();
+
+                var t = tags["ModelPixelScaleTag"];
+                returnRaster.cellSizeX = tags["ModelPixelScaleTag"][0];
+                returnRaster.cellSizeY = tags["ModelPixelScaleTag"][1];
+
+                var tiePoint = tags["ModelTiepointTag"];
+                double tpImageSpaceX = tiePoint[0];
+                double tpImageSpaceY = tiePoint[1];
+                double tpImageSpaceZ = tiePoint[2];
+                double tpWorldX = tiePoint[3];  // i.e., World Coordinates
+                double tpWorldY = tiePoint[4];
+                double tpWorldZ = tiePoint[5];
+                returnRaster.anchorPoint = new GTBpoint(tpWorldX, tpWorldY);
+
+                // Tech Debt: The anchor point may come from either ModelTiepointTag,
+                // ModelTransformationTag, or the sidecar file. If the sidecar file
+                // is present, use it. If not, then if ModelTiepointTag is defined,
+                // use that. Only look for and interpret ModelTransformationTag if
+                // ModelTiepointTag is not defined. See GeoTiff spec B.6 for
+                // authority and explanation.
+                // The tech debt here is that we have not implemented sidecar or
+                // ModelTransformationTag yet.
+
+                returnRaster.leftXCoordinate = tpWorldX;
+                returnRaster.topYCoordinate = tpWorldY;
+
+                #endregion raster items
+
+
 
             }
 
@@ -295,16 +322,22 @@ namespace GeoTBelt.GeoTiff
 
             //"GDAL_METADATA"  string type.
             returnDict["GDAL_METADATA"] = tif.GetAsString("GDAL_METADATA");
-            var vvvvv = tif.GetField(TIFFTAG_GEOKEYS)?.GetType();
 
             //"GDAL_NODATA"
-            returnDict["GDAL_NODATA"] = tif.GetAsString("GDAL_NODATA").Trim();
+            string noDataString = tif.GetAsString("GDAL_NODATA").Trim();
+            if (noDataString.Contains("\0"))
+            {
+                noDataString = noDataString.Remove(noDataString.Length - 1, 1);
+            }
+            returnDict["GDAL_NODATA"] = noDataString;
 
             #endregion Geospatial tags
 
-            HashSet<string> tagsInFileHS = new HashSet<string>(tagsInTheFile.Values);
-            HashSet<string> tagIHaveReadSoFar = new HashSet<string>(returnDict.Keys);
-            var InFileButNotReadYet = tagsInFileHS.Except(tagIHaveReadSoFar);
+            #region More Diagnostics
+            //HashSet<string> tagsInFileHS = new HashSet<string>(tagsInTheFile.Values);
+            //HashSet<string> tagIHaveReadSoFar = new HashSet<string>(returnDict.Keys);
+            //var InFileButNotReadYet = tagsInFileHS.Except(tagIHaveReadSoFar);
+            #endregion More Diagnostics
 
             return returnDict;
         }

@@ -6,9 +6,51 @@ namespace GeoTBelt
 {
     public class Raster
     {
-        public double cellSize { get; internal set; }
-        public double? cellSizeX { get; internal set; } = default(double?);
-        public double? cellSizeY { get; internal set; } = default(double?);
+        public double cellSize
+        {
+            get
+            {
+                if (_cellSizeX is null)
+                {
+                    _cellSizeX = _cellSizeY = 1.0;
+                }
+                return (double) _cellSizeX;
+            }
+            internal set
+            {
+                _cellSizeX = value;
+                _cellSizeY = value;
+            }
+        }
+
+        private double? _cellSizeX = null;
+        public double cellSizeX
+        {
+            get
+            {
+                if (_cellSizeX is null) { return cellSize; }
+                return (double)_cellSizeX;
+            }
+            internal set
+            {
+                _cellSizeX = value;
+            }
+        }
+        
+        private double? _cellSizeY = null;
+        public double cellSizeY 
+        {
+            get
+            {
+                if (_cellSizeY is null) { return cellSize; }
+                return (double) _cellSizeY;
+            }
+            internal set
+            {
+                _cellSizeY = value;
+            }
+        }
+
         public int numColumns { get; internal set; }
         public int numRows { get; internal set; }
         public double leftXCoordinate { get; internal set; }
