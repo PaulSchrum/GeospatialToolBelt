@@ -8,15 +8,15 @@ namespace GeoTBelt.GeoTiff
 {
     public class GeoTiffRaster : Raster
     {
-        public dynamic Compression { get; internal set; }
-        public short PhotometricInterpretation { get; internal set; }
-        public dynamic StripOffsets { get; internal set; }
-        public dynamic RowsPerStrip { get; internal set; }
-        public dynamic StripByteCounts { get; internal set; }
-        public dynamic PlanarConfiguration { get; internal set; }
-        public dynamic TileOffsets { get; internal set; }
-        public dynamic TileByteCounts { get; internal set; }
-        public dynamic SampleFormat { get; internal set; }
+        public int? Compression { get; set; }
+        public int? PhotometricInterpretation { get; internal set; }
+        public long[]? StripOffsets { get; internal set; }
+        public int? RowsPerStrip { get; internal set; }
+        public long[]? StripByteCounts { get; internal set; }
+        public int? PlanarConfiguration { get; internal set; }
+        public long[]? TileOffsets { get; internal set; }
+        public long[]? TileByteCounts { get; internal set; }
+        public int? SampleFormat { get; internal set; }
 
         internal GeoTiffRaster() { }
 

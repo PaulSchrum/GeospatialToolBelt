@@ -48,7 +48,7 @@ namespace GeoTBelt.GeoTiff
         private static readonly TiffTag TIFFTAG_GEOTIFFGEOGRAPHICTYPEGEOKEY = (TiffTag)34737;
         #endregion TIFF Tags
 
-        //TiffTag.DATATYPE;     // 33920
+        //TiffTag.DATATYPE;         // 33920
         //TiffTag.GEOTIEPOINTS;     // 33922
         //TiffTag.GEOTRANSMATRIX;   // 34264
         //TiffTag.GEOTIFFDIRECTORY; // 34735
@@ -73,9 +73,9 @@ namespace GeoTBelt.GeoTiff
 
 
 
-        public static Raster ReadGeoTiff(string fileToOpen)
+        public static GeoTiffRaster ReadGeoTiff(string fileToOpen)
         {
-            Raster returnRaster = null;
+            GeoTiffRaster returnRaster = null;
 
             using (Tiff tifData = Tiff.Open(fileToOpen, "r"))
             {
@@ -94,7 +94,7 @@ namespace GeoTBelt.GeoTiff
 
                 int imageSize = height * width;
 
-                Console.WriteLine($"ht: {height}    wd: {width}.");
+                //Console.WriteLine($"ht: {height}    wd: {width}.");
                 int[] raster = new int[imageSize];
 
                 string NoDataString = tags["GDAL_NODATA"];
@@ -126,13 +126,45 @@ namespace GeoTBelt.GeoTiff
                 returnRaster.anchorPoint = new GTBpoint(tpWorldX, tpWorldY);
                 returnRaster.leftXCoordinate = tpWorldX;
                 returnRaster.topYCoordinate = tpWorldY;
+
                 returnRaster.rightXCoordinate = tpWorldX + 
                     returnRaster.cellSizeX * returnRaster.numColumns;
+
                 returnRaster.bottomYCoordinate = tpWorldY -
                     returnRaster.cellSizeY * returnRaster.numRows;
                 #endregion raster base class items
 
                 #region GeoTiffRaster items
+                returnRaster.CellDataType = (CellDataTypeEnum) tags["SampleFormat"];
+
+
+                returnRaster.Compression = 
+                    (short?) tags.GetNullable("Compression");
+
+                returnRaster.PhotometricInterpretation =
+                    (short?)tags.GetNullable("PhotometricInterpretation");
+
+                returnRaster.StripOffsets =
+                    (long[])tags.GetNullable("StripOffsets");
+
+                returnRaster.RowsPerStrip =
+                    (short?)tags.GetNullable("RowsPerStrip");
+
+                returnRaster.StripByteCounts =
+                    (long[])tags.GetNullable("StripByteCounts");
+
+                returnRaster.PlanarConfiguration =
+                    (short?)tags.GetNullable("PlanarConfiguration");
+
+
+                returnRaster.TileOffsets =
+                    (long[])tags.GetNullable("TileOffsets");
+
+                returnRaster.TileByteCounts =
+                    (long[])tags.GetNullable("TileByteCounts");
+
+                returnRaster.SampleFormat =
+                    (short?)tags.GetNullable("SampleFormat");
 
                 #endregion GeoTiffRaster items
 
@@ -495,6 +527,13 @@ namespace GeoTBelt.GeoTiff
             }
 
             return null;
+        }
+
+        public static dynamic? GetNullable
+            (this Dictionary<string, dynamic?> thisDict, string key)
+        {
+            if (!thisDict.ContainsKey(key)) return null;
+            return thisDict[key];
         }
     }
 }
