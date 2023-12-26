@@ -3,12 +3,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using BitMiracle.LibTiff.Classic;
 
 namespace GeoTBelt.GeoTiff
 {
     public class GeoTiffRaster : Raster
     {
         public int? Compression { get; set; }
+        public int? BitsPerSample { get; set; }
         public int? PhotometricInterpretation { get; internal set; }
         public long[]? StripOffsets { get; internal set; }
         public int? RowsPerStrip { get; internal set; }
@@ -20,6 +22,12 @@ namespace GeoTBelt.GeoTiff
 
         internal GeoTiffRaster() { }
 
+        #region BitsPerSample Values
+        public static short BPS_UnsignedInteger { get { return 1; } }
+        public static short BPS_SignedInteger { get { return 2; } }
+        public static short BPS_IEEEFP { get { return 3; } }
+        public static short BPS_Undefined { get { return 4; }}
+        #endregion BitsPerSample Values
 
         #region PhotometricInterpretation Values
         public static short PI_WhiteIsZero { get { return 0; } }

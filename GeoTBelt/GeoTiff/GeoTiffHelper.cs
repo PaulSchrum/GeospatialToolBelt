@@ -134,12 +134,19 @@ namespace GeoTBelt.GeoTiff
                     returnRaster.cellSizeY * returnRaster.numRows;
                 #endregion raster base class items
 
-                #region GeoTiffRaster items
-                returnRaster.CellDataType = (CellDataTypeEnum) tags["SampleFormat"];
+                #region GeoTiffRaster tags
+                returnRaster.SampleFormat =
+                    (short?)tags.GetNullable("SampleFormat");
+                //returnRaster.CellDataType = (CellDataTypeEnum)tags["DataType"];
 
+                returnRaster.BitsPerSample =
+                    (short?)tags.GetNullable("BitsPerSample");
 
-                returnRaster.Compression = 
-                    (short?) tags.GetNullable("Compression");
+                returnRaster.CellDataType = determineType
+                    (returnRaster.SampleFormat, returnRaster.BitsPerSample);
+
+                returnRaster.Compression =
+                    (short?)tags.GetNullable("Compression");
 
                 returnRaster.PhotometricInterpretation =
                     (short?)tags.GetNullable("PhotometricInterpretation");
@@ -166,12 +173,71 @@ namespace GeoTBelt.GeoTiff
                 returnRaster.SampleFormat =
                     (short?)tags.GetNullable("SampleFormat");
 
-                #endregion GeoTiffRaster items
+                #endregion GeoTiffRaster tags
 
+                #region Read data bands
+                if(returnRaster.StripOffsets != null && 
+                    returnRaster.StripOffsets.Length > 0)
+                    // readByStripMethod
+                    tifData.ReadEncodedStrip(0, raster, raster.Length)
+
+                //if(returnRaster.TileOffsets != null && 
+                //    returnRaster.TileOffsets.Length > 0)
+                    // readByTileMethod
+
+                int[] rstr;
+                int numBands = (int) tags["SamplesPerPixel"];
+                var directoryCount = tifData.NumberOfDirectories();
+                for (int i = 0; i<directoryCount; i++)
+                {
+                    rstr = new int[imageSize * numBands];
+                }
+                //bool rslt = tifData.ReadRGBAImage(width, height, rstr);
+                tifData.IsTiled();
+                #endregion Read data bands
 
             }
 
             return returnRaster;
+        }
+
+        private static CellDataTypeEnum determineType(int? sampleFormat, int? bitsPerSample)
+        {
+            if(sampleFormat is null || bitsPerSample is null)
+                return CellDataTypeEnum.Unknown;
+
+            if(bitsPerSample == 4)
+            {
+                return CellDataTypeEnum.Unknown;
+            }
+            if(bitsPerSample == 8)
+            {
+                return CellDataTypeEnum.Byte;
+            }
+            if(bitsPerSample == 16)
+            {
+                if (sampleFormat == (short)GeoTiffRaster.BPS_UnsignedInteger)
+                    return CellDataTypeEnum.UInt16;
+                if (sampleFormat == (short)GeoTiffRaster.BPS_SignedInteger)
+                    return CellDataTypeEnum.Int16;
+                return CellDataTypeEnum.Unknown;
+            }
+            if(bitsPerSample == 32)
+            {
+                if(sampleFormat == (short)GeoTiffRaster.BPS_UnsignedInteger)
+                    return CellDataTypeEnum.UInt32;
+                if(sampleFormat == (short)GeoTiffRaster.BPS_SignedInteger)
+                    return CellDataTypeEnum.Int32;
+                if (sampleFormat == (short)GeoTiffRaster.BPS_IEEEFP)
+                    return CellDataTypeEnum.Float;
+                return CellDataTypeEnum.Unknown;
+            }
+            if(bitsPerSample == 64)
+            {
+                return CellDataTypeEnum.Double;
+                // There is no combination which would return Long or ULong.
+            }
+            return CellDataTypeEnum.Unknown;
         }
 
         private dynamic? imageGetField(Tiff img, TiffTag tag)
