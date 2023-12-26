@@ -1,4 +1,5 @@
 using GeoTBelt;
+using GeoTBelt.GeoTiff;
 using System.Linq;
 
 namespace Test_ToolBelt
@@ -13,7 +14,7 @@ namespace Test_ToolBelt
         private static string ascOutputTestFile;
         private static string ascOutputTestFileFullPath;
 
-        private static Raster geoTiffRaster;
+        private static GeoTiffRaster geoTiffRaster;
         private static string geoTiffFileName;
         private static string geoTiffFileFullPath;
 
@@ -24,7 +25,7 @@ namespace Test_ToolBelt
             // geoTiffFileName = "NCSU Biltmore Hall small uncomp.tif";
             geoTiffFileName = "TestData_00765413_uncompressed.tif";
             geoTiffFileFullPath = Path.Combine(currentDirectory, geoTiffFileName);
-            geoTiffRaster = Raster.Load(geoTiffFileFullPath);
+            geoTiffRaster = (GeoTiffRaster) Raster.Load(geoTiffFileFullPath);
 
             ascTestFileName = "TestData_00765413.asc";
             ascOutputTestFile = "TestData_00765413_out.asc";
@@ -32,7 +33,7 @@ namespace Test_ToolBelt
 
             var pathAsList = currentDirectory.Split("\\").ToList();
             pathAsList = pathAsList.Take(pathAsList.Count - 3).ToList();
-            currentDirectory = string.Join("\\", pathAsList);
+            //currentDirectory = string.Join("\\", pathAsList);
             ascTestFileFullPath = Path.Combine(currentDirectory, ascTestFileName);
             ascRaster = Raster.Load(ascTestFileFullPath);
 
@@ -91,6 +92,13 @@ namespace Test_ToolBelt
         public void GeoTiff_PopulatesSingleBand()
         {
             Assert.IsNotNull(geoTiffRaster);
+
+            Assert.AreEqual(
+                expected: 2, 
+                actual: geoTiffRaster.RowsPerStrip);
+
+            Assert.AreEqual(expected: 1,
+                actual: geoTiffRaster.bands.Count);
         }
 
         [ClassCleanup]
