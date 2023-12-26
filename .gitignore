@@ -361,3 +361,9 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+/Test_ToolBelt/TestData_00765413_deflate.tif
+/Test_ToolBelt/TestData_00765413_LZW.tif
+/Test_ToolBelt/TestData_00765413_packbits.tif
+/Test_ToolBelt/TestData_00765413_uncompressed.tif
+*.qgz
+/Test_ToolBelt/NCSU Biltmore Hall small uncomp.tif.aux.xml

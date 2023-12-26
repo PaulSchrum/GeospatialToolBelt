@@ -1,0 +1,56 @@
+<GDALMetadata>
+   <Item name="DataType">Generic</Item>
+   <Item name="RepresentationType" sample="0">ATHEMATIC</Item>  
+   <Item name="RepresentationType" sample="1">ATHEMATIC</Item>  
+   <Item name="RepresentationType" sample="2">ATHEMATIC</Item>  
+   <Item name="RepresentationType" sample="3">ATHEMATIC</Item>  
+   <Item name="RepresentationType" sample="4">ATHEMATIC</Item>
+</GDALMetadata>
+0
+
+    public class Raster
+    {
+
+public double cellSize { get; internal set; }    ModelPixelScaleTag (?)
+public int numColumns { get; internal set; }     ImageWidth
+public int numRows { get; internal set; }        ImageLength
+public double leftXCoordinate { get; internal set; }   ModelTiepointTag[1] (?)
+public double bottomYCoordinate { get; internal set; } ModelTiepointTag[?]
+public double topYCoordinate { get; internal set; }    ModelTiepointTag[1]
+public GTBpoint anchorPoint { get; internal set; } // upr lft point  ModelTiepointTag[1]
+public string NoDataValue { get; internal set; }  GDAL_NODATA
+public List<Band> bands                           NA
+bandCount                                         SamplesPerPixel
+
+
+Things in a most basic GeoTiff not in basic Raster:
+
+"Comp	ression"    short, enumer    
+1 None      2 CCITT Modif Huffman   32773 PackBits    (LZW, JPG not understood)
+"PhotometricInterpretation"   short, enumer
+"StripOffsets"                ulong[]
+"RowsPerStrip"                short, number
+"StripByteCounts"             ulong[]
+"PlanarConfiguration"         short, enumer
+"TileOffsets"                 ulong[]
+"TileByteCounts"              ulong[]
+"SampleFormat"                short, enumer
+"ExtraSamples"                short, number
+
+
+Things in the Arc-generated image geotif not in the most basic geotif:
+Incomplete, WIP.
+
+GeoKeyDirectoryTag
+GeoDoubleParamsTag
+GeoAsciiParamsTag
+
+
+
+See Required Fields for Bilevel Images   in tiff6.pdf
+
+It would be nice to get DateTime.
+Also would like to write out Software.
+
+
+
