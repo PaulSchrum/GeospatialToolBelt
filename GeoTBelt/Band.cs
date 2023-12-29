@@ -52,6 +52,12 @@ namespace GeoTBelt
 
                 case 2:
                     {
+                        if (rowIdx >= MyParent.numRows && colIdx >= MyParent.numColumns)
+                        {
+                            throw new IndexOutOfRangeException(
+                            $"Row index {rowIdx} and column index {colIdx} are out of range. " +
+                            $"Size of the raster is [{MyParent.numRows}, {MyParent.numColumns}]. ");
+                        }
                         if(rowIdx >= MyParent.numRows)
                         {
                             throw new IndexOutOfRangeException(
