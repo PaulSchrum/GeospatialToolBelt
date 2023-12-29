@@ -99,6 +99,45 @@ namespace Test_ToolBelt
 
             Assert.AreEqual(expected: 1,
                 actual: geoTiffRaster.bands.Count);
+
+            float actual0_0 = (float) geoTiffRaster.bands[0].At(0, 0);
+            Assert.AreEqual(expected: 4477.26f, actual: actual0_0, delta: 0.0001);
+
+            float actual799_799 = (float)geoTiffRaster.bands[0].At(799, 799);
+            Assert.AreEqual(expected: 5055.912f, actual: actual799_799, delta: 0.0001);
+
+            float actual798_797 = (float)geoTiffRaster.bands[0].At(798, 797);
+            Assert.AreEqual(expected: 5055.26f, actual: actual798_797, delta: 0.0001);
+
+            bool exceptionThrown = false;
+            try
+            {
+                float fails = (float)geoTiffRaster.bands[0].At(800, 800);
+            }
+            catch (IndexOutOfRangeException)
+            { exceptionThrown = true; } 
+            catch (Exception ex) { }
+            Assert.IsTrue(exceptionThrown);
+
+            exceptionThrown = false;
+            try
+            {
+                float fails = (float)geoTiffRaster.bands[0].At(100, 800);
+            }
+            catch (IndexOutOfRangeException)
+            { exceptionThrown = true; }
+            catch (Exception ex) { }
+            Assert.IsTrue(exceptionThrown);
+
+            exceptionThrown = false;
+            try
+            {
+                float fails = (float)geoTiffRaster.bands[0].At(800, 100);
+            }
+            catch (IndexOutOfRangeException)
+            { exceptionThrown = true; }
+            catch (Exception ex) { }
+            Assert.IsTrue(exceptionThrown);
         }
 
         [ClassCleanup]
