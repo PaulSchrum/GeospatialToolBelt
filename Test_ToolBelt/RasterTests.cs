@@ -8,35 +8,58 @@ namespace Test_ToolBelt
     public class RasterTests
     {
         private static string currentDirectory;
+
         private static string ascTestFileName;
         private static string ascTestFileFullPath;
         private static Raster ascRaster;
         private static string ascOutputTestFile;
         private static string ascOutputTestFileFullPath;
 
-        private static GeoTiffRaster geoTiffRaster;
-        private static string geoTiffFileName;
-        private static string geoTiffFileFullPath;
+        private static GeoTiffRaster geoTiffRaster_singleBand;
+        private static string geoTiffFileName_singleBand;
+        private static string geoTiffFileFullPath_singleBand;
 
         [ClassInitialize]
         public static void Initialize(TestContext context)
         {
             currentDirectory = improvedGetCurrentDirectory("Test_ToolBelt");
-            // geoTiffFileName = "NCSU Biltmore Hall small uncomp.tif";
-            geoTiffFileName = "TestData_00765413_uncompressed.tif";
-            geoTiffFileFullPath = Path.Combine(currentDirectory, geoTiffFileName);
-            geoTiffRaster = (GeoTiffRaster) Raster.Load(geoTiffFileFullPath);
 
-            ascTestFileName = "TestData_00765413.asc";
-            ascOutputTestFile = "TestData_00765413_out.asc";
-            ascOutputTestFileFullPath = Path.Combine(currentDirectory, ascOutputTestFile);
+            //ascTestFileName = "TestData_00765413.asc";
+            //ascOutputTestFile = "TestData_00765413_out.asc";
+            //ascOutputTestFileFullPath = Path.Combine(currentDirectory, ascOutputTestFile);
 
-            var pathAsList = currentDirectory.Split("\\").ToList();
-            pathAsList = pathAsList.Take(pathAsList.Count - 3).ToList();
-            //currentDirectory = string.Join("\\", pathAsList);
-            ascTestFileFullPath = Path.Combine(currentDirectory, ascTestFileName);
-            ascRaster = Raster.Load(ascTestFileFullPath);
+            //var pathAsList = currentDirectory.Split("\\").ToList();
+            //pathAsList = pathAsList.Take(pathAsList.Count - 3).ToList();
+            ////currentDirectory = string.Join("\\", pathAsList);
+            //ascTestFileFullPath = Path.Combine(currentDirectory, ascTestFileName);
+            //ascRaster = Raster.Load(ascTestFileFullPath);
+        }
 
+        private static void initializeAscRaster()
+        {
+            if(ascRaster is null)
+            {
+                ascTestFileName = "TestData_00765413.asc";
+                ascOutputTestFile = "TestData_00765413_out.asc";
+                ascOutputTestFileFullPath = Path.Combine(currentDirectory, ascOutputTestFile);
+                var pathAsList = currentDirectory.Split("\\").ToList();
+                pathAsList = pathAsList.Take(pathAsList.Count - 3).ToList();
+                //currentDirectory = string.Join("\\", pathAsList);
+                ascTestFileFullPath = Path.Combine(currentDirectory, ascTestFileName);
+                ascRaster = Raster.Load(ascTestFileFullPath);
+            }
+
+        }
+
+        private static void initializeSingleBandTiff()
+        {
+            if (geoTiffRaster_singleBand is null)
+            {
+                // geoTiffFileName = "NCSU Biltmore Hall small uncomp.tif";
+                geoTiffFileName_singleBand = "TestData_00765413_uncompressed.tif";
+                geoTiffFileFullPath_singleBand = Path.Combine(currentDirectory, geoTiffFileName_singleBand);
+                geoTiffRaster_singleBand = (GeoTiffRaster)Raster.Load(geoTiffFileFullPath_singleBand);
+            }
         }
 
         private static string improvedGetCurrentDirectory(string desiredDirectory)
@@ -53,6 +76,7 @@ namespace Test_ToolBelt
         [TestMethod]
         public void ASC_PopulatesSingleBand() 
         {
+            initializeAscRaster();
             Assert.AreEqual(1, ascRaster.bands.Count);
 
             double expected = 4477.26d;
@@ -72,6 +96,7 @@ namespace Test_ToolBelt
         [TestMethod]
         public void ASC_WriteASCRaster_BlockWriteMethod_correctly()
         {
+            initializeAscRaster();
             Assert.IsNotNull(ascRaster);
             double? intermediateValue = ascRaster.bands[0].At(3, 3);
             Assert.IsNotNull(intermediateValue);
@@ -91,28 +116,29 @@ namespace Test_ToolBelt
         [TestMethod]
         public void GeoTiff_PopulatesSingleBand()
         {
-            Assert.IsNotNull(geoTiffRaster);
+            initializeSingleBandTiff();
+            Assert.IsNotNull(geoTiffRaster_singleBand);
 
             Assert.AreEqual(
                 expected: 2, 
-                actual: geoTiffRaster.RowsPerStrip);
+                actual: geoTiffRaster_singleBand.RowsPerStrip);
 
             Assert.AreEqual(expected: 1,
-                actual: geoTiffRaster.bands.Count);
+                actual: geoTiffRaster_singleBand.bands.Count);
 
-            float actual0_0 = (float) geoTiffRaster.bands[0].At(0, 0);
+            float actual0_0 = (float) geoTiffRaster_singleBand.bands[0].At(0, 0);
             Assert.AreEqual(expected: 4477.26f, actual: actual0_0, delta: 0.0001);
 
-            float actual799_799 = (float)geoTiffRaster.bands[0].At(799, 799);
+            float actual799_799 = (float)geoTiffRaster_singleBand.bands[0].At(799, 799);
             Assert.AreEqual(expected: 5055.912f, actual: actual799_799, delta: 0.0001);
 
-            float actual798_797 = (float)geoTiffRaster.bands[0].At(798, 797);
+            float actual798_797 = (float)geoTiffRaster_singleBand.bands[0].At(798, 797);
             Assert.AreEqual(expected: 5055.26f, actual: actual798_797, delta: 0.0001);
 
             bool exceptionThrown = false;
             try
             {
-                float fails = (float)geoTiffRaster.bands[0].At(800, 800);
+                float fails = (float)geoTiffRaster_singleBand.bands[0].At(800, 800);
             }
             catch (IndexOutOfRangeException)
             { exceptionThrown = true; } 
@@ -122,7 +148,7 @@ namespace Test_ToolBelt
             exceptionThrown = false;
             try
             {
-                float fails = (float)geoTiffRaster.bands[0].At(100, 800);
+                float fails = (float)geoTiffRaster_singleBand.bands[0].At(100, 800);
             }
             catch (IndexOutOfRangeException)
             { exceptionThrown = true; }
@@ -132,7 +158,7 @@ namespace Test_ToolBelt
             exceptionThrown = false;
             try
             {
-                float fails = (float)geoTiffRaster.bands[0].At(800, 100);
+                float fails = (float)geoTiffRaster_singleBand.bands[0].At(800, 100);
             }
             catch (IndexOutOfRangeException)
             { exceptionThrown = true; }
