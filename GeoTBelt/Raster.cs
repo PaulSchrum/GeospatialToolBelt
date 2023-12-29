@@ -1,5 +1,6 @@
 ﻿using BitMiracle.LibTiff.Classic;
 using GeoTBelt.GeoTiff;
+using System.Collections;
 //using static System.Net.Mime.MediaTypeNames;
 
 namespace GeoTBelt
@@ -162,7 +163,7 @@ namespace GeoTBelt
 
                 topYCoordinate = bottomYCoordinate + cellSize * numRows;
                 anchorPoint = new GTBpoint(leftXCoordinate, topYCoordinate);
-                band.Type = typeof(double);
+                band.theType = typeof(double);
 
                 string line;
                 int rowCounter = -1;
@@ -179,21 +180,21 @@ namespace GeoTBelt
                     {
                         columnCounter++;
                         if (entry == this.NoDataValue)
-                            band.CellArray[columnCounter, rowCounter] = double.NaN;
+                            band.Set(double.NaN, rowCounter, columnCounter);
                         else
                         {
                             if(!arrayCreated)
                             {
                                 band.CreateCellArray(numColumns, numRows);
-                                band.Type = numberParser(entry);
+                                band.theType = numberParser(entry);
                                 arrayCreated = true;
                             }
-                            if (band.Type == typeof(double))
-                                band.CellArray[columnCounter, rowCounter] = double.Parse(entry);
-                            else if (band.Type == typeof(int))
-                                band.CellArray[columnCounter, rowCounter] = int.Parse(entry);
+                            if (band.theType == typeof(double))
+                                band.Set(double.Parse(entry), rowCounter, columnCounter);
+                            else if (band.theType == typeof(int))
+                                band.Set(int.Parse(entry), rowCounter, columnCounter);
                             else // it's string or char. Can't handle complex.
-                                band.CellArray[columnCounter, rowCounter] = entry;
+                                band.Set(entry, rowCounter, columnCounter);
                         }
                     }
                 }
@@ -260,6 +261,11 @@ namespace GeoTBelt
         //public Raster populateRasterFromTiffFile(string fileToOpen)
         //{ }
 
+        public void AddBand(dynamic[] dataset)
+        {
+            var newBand = new Band(this, dataset, dataType, this.numRows, this.numColumns);
+            this.bands.Add(newBand);
+        }
 
         private dynamic? imageGetField(Tiff img, TiffTag tag)
         {

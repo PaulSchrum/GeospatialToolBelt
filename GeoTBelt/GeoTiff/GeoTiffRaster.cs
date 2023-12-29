@@ -11,6 +11,7 @@ namespace GeoTBelt.GeoTiff
     {
         public int? Compression { get; set; }
         public int? BitsPerSample { get; set; }
+        public int? SamplesPerPixel { get; set; }
         public int? PhotometricInterpretation { get; internal set; }
         public long[]? StripOffsets { get; internal set; }
         public int? RowsPerStrip { get; internal set; }
@@ -47,8 +48,12 @@ namespace GeoTBelt.GeoTiff
         public static short SF_IEEEFP { get { return 3; } }
         public static short SF_Undefined { get { return 4; } }
         public static short SF_ComplexInteger { get { return 5; } }
-        
         #endregion SampleFormat
+
+        #region PlanarConfiguration
+        public static short PC_Contiguous { get { return 1; } }
+        public static short PC_Separate { get { return 2; }   }
+        #endregion PlanarConfiguration
 
     }
 }

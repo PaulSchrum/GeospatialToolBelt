@@ -139,6 +139,9 @@ namespace GeoTBelt.GeoTiff
                     (short?)tags.GetNullable("SampleFormat");
                 //returnRaster.CellDataType = (CellDataTypeEnum)tags["DataType"];
 
+                returnRaster.SamplesPerPixel = 
+                    (short?)tags.GetNullable("SamplesPerPixel");
+
                 returnRaster.BitsPerSample =
                     (short?)tags.GetNullable("BitsPerSample");
 
@@ -176,19 +179,59 @@ namespace GeoTBelt.GeoTiff
                 #endregion GeoTiffRaster tags
 
                 #region Read data bands
-                if(returnRaster.StripOffsets != null && 
+                List<Byte> byteList = new List<byte>();
+                if (returnRaster.StripOffsets != null &&
                     returnRaster.StripOffsets.Length > 0)
-                    // readByStripMethod
-                    tifData.ReadEncodedStrip(0, raster, raster.Length)
+                {   // readByStripMethod
+                    byte[] buf = new byte[tifData.ScanlineSize()];
+                    if (PlanarConfig.CONTIG == PlanarConfig.CONTIG)
+                    {
+                        for (int row = 0; row < returnRaster.numRows; row++)
+                        {
+                            tifData.ReadScanline(buf, row);
+                            byteList.AddRange(buf);
+                        }
+                        int bytesPerItem = 32 / 8;
+                        List<float> floatList = new List<float>();
+                        for(int byteIdx=0; byteIdx < byteList.Count; byteIdx+=bytesPerItem)
+                        {
+                            // Extract four bytes starting from byteIdx
+                            byte[] bytes = byteList.Skip(byteIdx).Take(bytesPerItem).ToArray();
+
+                            // Convert the extracted bytes to a single float
+                            float singleFloat = BitConverter.ToSingle(bytes, 0);
+                            floatList.Add(singleFloat);
+                        }
+                        returnRaster.AddBand(floatList);
+                    }
+                    else if (PlanarConfig.CONTIG == PlanarConfig.SEPARATE)
+                    {
+                        //value = image.GetField(TiffTag.SAMPLESPERPIXEL);
+                        short spp = (short)returnRaster.SamplesPerPixel;
+
+                        for (short s = 0; s < spp; s++)
+                        {
+                            for (int row = 0; row < returnRaster.numRows; row++)
+                                tifData.ReadScanline(buf, row, s);
+                        }
+                    }
+                    else
+                    {
+                        throw new DataMisalignedException(
+                        "Unknown data configuration prevents reading this Tiff.");
+                    }
+                }
+
+                //tifData.ReadEncodedStrip(0, raster, raster.Length);
 
                 //if(returnRaster.TileOffsets != null && 
                 //    returnRaster.TileOffsets.Length > 0)
-                    // readByTileMethod
+                // readByTileMethod
 
                 int[] rstr;
-                int numBands = (int) tags["SamplesPerPixel"];
+                int numBands = (int)tags["SamplesPerPixel"];
                 var directoryCount = tifData.NumberOfDirectories();
-                for (int i = 0; i<directoryCount; i++)
+                for (int i = 0; i < directoryCount; i++)
                 {
                     rstr = new int[imageSize * numBands];
                 }
@@ -196,7 +239,7 @@ namespace GeoTBelt.GeoTiff
                 tifData.IsTiled();
                 #endregion Read data bands
 
-            }
+                }
 
             return returnRaster;
         }
