@@ -23,16 +23,6 @@ namespace Test_ToolBelt
         public static void Initialize(TestContext context)
         {
             currentDirectory = improvedGetCurrentDirectory("Test_ToolBelt");
-
-            //ascTestFileName = "TestData_00765413.asc";
-            //ascOutputTestFile = "TestData_00765413_out.asc";
-            //ascOutputTestFileFullPath = Path.Combine(currentDirectory, ascOutputTestFile);
-
-            //var pathAsList = currentDirectory.Split("\\").ToList();
-            //pathAsList = pathAsList.Take(pathAsList.Count - 3).ToList();
-            ////currentDirectory = string.Join("\\", pathAsList);
-            //ascTestFileFullPath = Path.Combine(currentDirectory, ascTestFileName);
-            //ascRaster = Raster.Load(ascTestFileFullPath);
         }
 
         private static void initializeAscRaster()
