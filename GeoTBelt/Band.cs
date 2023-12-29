@@ -52,6 +52,18 @@ namespace GeoTBelt
 
                 case 2:
                     {
+                        if(rowIdx >= MyParent.numRows)
+                        {
+                            throw new IndexOutOfRangeException(
+                            $"Row index {rowIdx} is out of range. " +
+                            $"Number of rows is {MyParent.numRows}.");
+                        }
+                        if(colIdx >= MyParent.numColumns)
+                        {
+                            throw new IndexOutOfRangeException(
+                            $"Column index {colIdx} is out of range. " +
+                            $"Number of columns is {MyParent.numColumns}.");
+                        }
                         int linearIndex = rowIdx * MyParent.numColumns;
                         linearIndex += colIdx ?? default;
                         return linearIndex;
