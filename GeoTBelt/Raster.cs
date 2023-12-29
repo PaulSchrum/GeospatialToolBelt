@@ -60,7 +60,7 @@ namespace GeoTBelt
         public double topYCoordinate { get; internal set; }
         public GTBpoint anchorPoint { get; internal set; } // upper left point of the raster
         public string NoDataValue { get; internal set; }
-        public CellDataTypeEnum CellDataType { get; internal set; } = CellDataTypeEnum.Unknown;
+        internal Type CellDataType { get; set; } = null;
         public List<Band> bands { get; internal set; } = new List<Band>();
 
 
@@ -261,9 +261,11 @@ namespace GeoTBelt
         //public Raster populateRasterFromTiffFile(string fileToOpen)
         //{ }
 
-        public void AddBand(dynamic[] dataset)
+        public void AddBand(IEnumerable<dynamic> datasetIn)
         {
-            var newBand = new Band(this, dataset, dataType, this.numRows, this.numColumns);
+            dynamic[] dataset = datasetIn.ToArray();
+            Type bandType = dataset.GetType().GetElementType();
+            var newBand = new Band(this, dataset, bandType, this.numRows, this.numColumns);
             this.bands.Add(newBand);
         }
 

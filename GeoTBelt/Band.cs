@@ -14,9 +14,13 @@ namespace GeoTBelt
         public Raster MyParent { get; protected set; }
         public Type theType { get; set; } = typeof(double);
 
+        private Band() { }
+
         public Band(Raster parent)
         { 
             MyParent = parent;
+            theType = null;
+            CellArray = null;
         }
 
         public Band(Raster parent, dynamic[] dataFrame, Type type,

@@ -56,13 +56,13 @@ namespace Test_ToolBelt
             Assert.AreEqual(1, ascRaster.bands.Count);
 
             double expected = 4477.26d;
-            double? actual = ascRaster.bands[0].At([0, 0]);
+            double? actual = ascRaster.bands[0].At(0, 0);
             Assert.IsNotNull(actual);
             Assert.AreEqual(expected: expected, actual: (double) actual,
                 delta: 0.005);
 
             expected = 4476.672d;
-            actual = ascRaster.bands[0].At([1, 1]);
+            actual = ascRaster.bands[0].At(1, 1);
             Assert.IsNotNull(actual);
             Assert.AreEqual(expected: expected, actual: (double)actual,
                 delta: 0.005);
@@ -73,16 +73,16 @@ namespace Test_ToolBelt
         public void ASC_WriteASCRaster_BlockWriteMethod_correctly()
         {
             Assert.IsNotNull(ascRaster);
-            double? intermediateValue = ascRaster.bands[0].At([3, 3]);
+            double? intermediateValue = ascRaster.bands[0].At(3, 3);
             Assert.IsNotNull(intermediateValue);
             double expected = (double)intermediateValue + 5.0;
-            ascRaster.bands[0].Set([3, 3], expected);
+            ascRaster.bands[0].Set(expected, 3, 3);
             ascRaster.WriteASCRaster(ascOutputTestFileFullPath);
 
             var outputRaster = Raster.Load(ascOutputTestFileFullPath);
             Assert.IsNotNull(outputRaster);
             Assert.AreEqual(1, outputRaster.bands.Count);
-            double? actual = outputRaster.bands[0].At([3, 3]);
+            double? actual = outputRaster.bands[0].At(3, 3);
             Assert.AreEqual(expected: expected, actual: (double)actual,
                 delta: 0.005);
         }

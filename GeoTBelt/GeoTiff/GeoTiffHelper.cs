@@ -202,7 +202,7 @@ namespace GeoTBelt.GeoTiff
                             float singleFloat = BitConverter.ToSingle(bytes, 0);
                             floatList.Add(singleFloat);
                         }
-                        returnRaster.AddBand(floatList);
+                        returnRaster.AddBand(floatList.Cast<dynamic>());
                     }
                     else if (PlanarConfig.CONTIG == PlanarConfig.SEPARATE)
                     {
@@ -244,43 +244,43 @@ namespace GeoTBelt.GeoTiff
             return returnRaster;
         }
 
-        private static CellDataTypeEnum determineType(int? sampleFormat, int? bitsPerSample)
+        private static Type determineType(int? sampleFormat, int? bitsPerSample)
         {
             if(sampleFormat is null || bitsPerSample is null)
-                return CellDataTypeEnum.Unknown;
+                return null;
 
             if(bitsPerSample == 4)
             {
-                return CellDataTypeEnum.Unknown;
+                return null;
             }
             if(bitsPerSample == 8)
             {
-                return CellDataTypeEnum.Byte;
+                return Type.GetType("System.Byte"); ;
             }
             if(bitsPerSample == 16)
             {
                 if (sampleFormat == (short)GeoTiffRaster.BPS_UnsignedInteger)
-                    return CellDataTypeEnum.UInt16;
+                    return Type.GetType("System.UInt16"); // CellDataTypeEnum.UInt16;
                 if (sampleFormat == (short)GeoTiffRaster.BPS_SignedInteger)
-                    return CellDataTypeEnum.Int16;
-                return CellDataTypeEnum.Unknown;
+                    return Type.GetType("System.UInt16"); //CellDataTypeEnum.Int16;
+                return null; // CellDataTypeEnum.Unknown;
             }
             if(bitsPerSample == 32)
             {
                 if(sampleFormat == (short)GeoTiffRaster.BPS_UnsignedInteger)
-                    return CellDataTypeEnum.UInt32;
+                    return Type.GetType("System.UInt32"); // CellDataTypeEnum.UInt32;
                 if(sampleFormat == (short)GeoTiffRaster.BPS_SignedInteger)
-                    return CellDataTypeEnum.Int32;
+                    return Type.GetType("System.Int32"); // CellDataTypeEnum.Int32;
                 if (sampleFormat == (short)GeoTiffRaster.BPS_IEEEFP)
-                    return CellDataTypeEnum.Float;
-                return CellDataTypeEnum.Unknown;
+                    return Type.GetType("System.Float"); //CellDataTypeEnum.Float;
+                return null; // CellDataTypeEnum.Unknown;
             }
             if(bitsPerSample == 64)
             {
-                return CellDataTypeEnum.Double;
+                return Type.GetType("System.Double"); //CellDataTypeEnum.Double;
                 // There is no combination which would return Long or ULong.
             }
-            return CellDataTypeEnum.Unknown;
+            return null; // CellDataTypeEnum.Unknown;
         }
 
         private dynamic? imageGetField(Tiff img, TiffTag tag)
