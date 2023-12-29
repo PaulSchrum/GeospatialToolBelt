@@ -51,33 +51,33 @@ namespace GeoTBelt
                     return rowIdx;
 
                 case 2:
+                {
+                    if (rowIdx >= MyParent.numRows && colIdx >= MyParent.numColumns)
                     {
-                        if (rowIdx >= MyParent.numRows && colIdx >= MyParent.numColumns)
-                        {
-                            throw new IndexOutOfRangeException(
-                            $"Row index {rowIdx} and column index {colIdx} are out of range. " +
-                            $"Size of the raster is [{MyParent.numRows}, {MyParent.numColumns}]. ");
-                        }
-                        if(rowIdx >= MyParent.numRows)
-                        {
-                            throw new IndexOutOfRangeException(
-                            $"Row index {rowIdx} is out of range. " +
-                            $"Number of rows is {MyParent.numRows}.");
-                        }
-                        if(colIdx >= MyParent.numColumns)
-                        {
-                            throw new IndexOutOfRangeException(
-                            $"Column index {colIdx} is out of range. " +
-                            $"Number of columns is {MyParent.numColumns}.");
-                        }
-                        int linearIndex = rowIdx * MyParent.numColumns;
-                        linearIndex += colIdx ?? default;
-                        return linearIndex;
+                        throw new IndexOutOfRangeException(
+                        $"Row index {rowIdx} and column index {colIdx} are out of range. " +
+                        $"Size of the raster is [{MyParent.numRows}, {MyParent.numColumns}]. ");
                     }
+                    if(rowIdx >= MyParent.numRows)
+                    {
+                        throw new IndexOutOfRangeException(
+                        $"Row index {rowIdx} is out of range. " +
+                        $"Number of rows is {MyParent.numRows}.");
+                    }
+                    if(colIdx >= MyParent.numColumns)
+                    {
+                        throw new IndexOutOfRangeException(
+                        $"Column index {colIdx} is out of range. " +
+                        $"Number of columns is {MyParent.numColumns}.");
+                    }
+                    int linearIndex = rowIdx * MyParent.numColumns;
+                    linearIndex += colIdx ?? default;
+                    return linearIndex;
+                }
                 case 3:
-                    {   // technical debt: case of 3D raster
-                        throw new NotImplementedException();
-                    }
+                {   // technical debt: case of 3D raster
+                    throw new NotImplementedException();
+                }
                 default:
                     throw new NotImplementedException();
             }
