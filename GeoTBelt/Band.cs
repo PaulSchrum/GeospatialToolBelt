@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Reflection;
 using System.Security.AccessControl;
@@ -29,6 +30,86 @@ namespace GeoTBelt
         {
             CellArray = dataFrame;
             theType = type;
+        }
+
+        public Band (Raster parent, Byte[] dataFrameAsBytes, Type aType,
+                       int numRows, int numCols)
+            : this(parent)
+        {
+            int typeSize = Auxiliaries.TypeSize(aType);
+            theType = aType;
+            int numCells = dataFrameAsBytes.Length / typeSize;
+            if (theType.Equals(typeof(Byte)))
+            {
+                CellArray = dataFrameAsBytes.Cast<dynamic>().ToArray();
+            }
+            else if(theType.Equals(typeof(System.UInt16)))
+            {
+                // how assign dataFramAsBytes to CellArray using BitConverter?
+                CellArray = new dynamic[numCells];
+                for (int i = 0; i < numCells; i++)
+                {
+                    CellArray[i] =  BitConverter.ToUInt16(dataFrameAsBytes, i * typeSize);
+                }
+            }
+            else if (theType.Equals(typeof(System.Int16)))
+            {
+                CellArray = new dynamic[numCells];
+                for (int i = 0; i < numCells; i++)
+                {
+                    CellArray[i] = BitConverter.ToInt16(dataFrameAsBytes, i * typeSize);
+                }
+            }
+            else if (theType.Equals(typeof(System.UInt32)))
+            {
+                CellArray = new dynamic[numCells];
+                for (int i = 0; i < numCells; i++)
+                {
+                    CellArray[i] = BitConverter.ToUInt32(dataFrameAsBytes, i * typeSize);
+                }
+            }
+            else if (theType.Equals(typeof(System.Int32)))
+            {
+                CellArray = new dynamic[numCells];
+                for (int i = 0; i < numCells; i++)
+                {
+                    CellArray[i] = BitConverter.ToInt32(dataFrameAsBytes, i * typeSize);
+                }
+            }
+            else if (theType.Equals(typeof(System.UInt64)))
+            {
+                CellArray = new dynamic[numCells];
+                for (int i = 0; i < numCells; i++)
+                {
+                    CellArray[i] = BitConverter.ToUInt64(dataFrameAsBytes, i * typeSize);
+                }
+            }
+            else if (theType.Equals(typeof(System.Int64)))
+            {
+                CellArray = new dynamic[numCells];
+                for (int i = 0; i < numCells; i++)
+                {
+                    CellArray[i] = BitConverter.ToInt64(dataFrameAsBytes, i * typeSize);
+                }
+            }
+            else if (theType.Equals(typeof(System.Single)))
+            {
+                CellArray = new dynamic[numCells];
+                for (int i = 0; i < numCells; i++)
+                {
+                    CellArray[i] = BitConverter.ToSingle(dataFrameAsBytes, i * typeSize);
+                }
+            }
+            else if (theType.Equals(typeof(System.Double)))
+            {
+                CellArray = new dynamic[numCells];
+                for (int i = 0; i < numCells; i++)
+                {
+                    CellArray[i] = BitConverter.ToDouble(dataFrameAsBytes, i * typeSize);
+                }
+            }
+            
+
         }
 
         /// <summary>
@@ -145,33 +226,7 @@ namespace GeoTBelt
         {
             get
             {
-                switch (Type.GetTypeCode(this.theType))
-                {
-                    case TypeCode.Byte:
-                    case TypeCode.SByte:
-                        return sizeof(byte); // or sizeof(sbyte)
-                    case TypeCode.Int16:
-                    case TypeCode.UInt16:
-                        return sizeof(short); // or sizeof(ushort)
-                    case TypeCode.Int32:
-                    case TypeCode.UInt32:
-                        return sizeof(int); // or sizeof(uint)
-                    case TypeCode.Int64:
-                    case TypeCode.UInt64:
-                        return sizeof(long); // or sizeof(ulong)
-                    case TypeCode.Single:
-                        return sizeof(float);
-                    case TypeCode.Double:
-                        return sizeof(double);
-                    case TypeCode.Decimal:
-                        return sizeof(decimal);
-                    case TypeCode.Char:
-                        return sizeof(char);
-                    case TypeCode.Boolean:
-                        return sizeof(bool);
-                    default:
-                        throw new ArgumentException("Unsupported type");
-                }
+                return Auxiliaries.TypeSize(this.theType);
             }
         }
 

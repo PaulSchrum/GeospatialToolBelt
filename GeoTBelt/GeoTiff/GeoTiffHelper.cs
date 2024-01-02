@@ -71,8 +71,6 @@ namespace GeoTBelt.GeoTiff
         //TiffTag.GEOTIFFPHOTOMETRICINTERPRETATIONTAG;   // 33922
         //TiffTag.GEOTIFFGEOGRAPHICTYPEGEOKEY;  // 34737
 
-
-
         public static GeoTiffRaster ReadGeoTiff(string fileToOpen)
         {
             GeoTiffRaster returnRaster = null;
@@ -97,9 +95,13 @@ namespace GeoTBelt.GeoTiff
                 //Console.WriteLine($"ht: {height}    wd: {width}.");
                 int[] raster = new int[imageSize];
 
-                string NoDataString = tags["GDAL_NODATA"];
-                if(NoDataString is not null)
-                    returnRaster.NoDataValue = NoDataString.Trim();
+                string NoDataString = String.Empty;
+                if(tags.ContainsKey("GDAL_NODATA"))
+                {
+                    NoDataString = tags["GDAL_NODATA"];
+                    if (NoDataString is not null)
+                        returnRaster.NoDataValue = NoDataString.Trim();
+                }
 
                 var t = tags["ModelPixelScaleTag"];
                 returnRaster.cellSizeX = tags["ModelPixelScaleTag"][0];
@@ -173,39 +175,85 @@ namespace GeoTBelt.GeoTiff
                 returnRaster.TileByteCounts =
                     (long[])tags.GetNullable("TileByteCounts");
 
+                returnRaster.TileWidth = (long?)tags.GetNullable("TileWidth");
+                returnRaster.TileLength = (long?)tags.GetNullable("TileLength");
+                returnRaster.TileSize = tifData.TileSize();
+
                 returnRaster.SampleFormat =
                     (short?)tags.GetNullable("SampleFormat");
 
                 #endregion GeoTiffRaster tags
 
                 #region Read data bands
-                List<Byte> byteList = new List<byte>();
+                int bytesPerValue = (int) returnRaster.BitsPerSample;
+                int valuesPerPixel = (int)returnRaster.SamplesPerPixel;
+                    
+                returnRaster.CellDataType = 
+                    determineType(returnRaster.SampleFormat, 
+                    returnRaster.BitsPerSample);
+
+                List<List<Byte>> byteLists = new List<List<byte>>();
+                for(int i=0; i < valuesPerPixel; i++)
+                {
+                    byteLists.Add(new List<byte>());
+                }
+
                 if (returnRaster.StripOffsets != null &&
                     returnRaster.StripOffsets.Length > 0)
                 {   // readByStripMethod
-                    byte[] buf = new byte[tifData.ScanlineSize()];
-                    if (PlanarConfig.CONTIG == PlanarConfig.CONTIG)
-                    {
+                    int bytesToRead = tifData.ScanlineSize();
+                    byte[] buf = new byte[bytesToRead];
+                    if ((int) PlanarConfig.CONTIG == (int) returnRaster.PlanarConfiguration)
+                    {   // CONTIG is chunky -- all bands in one strip
                         for (int row = 0; row < returnRaster.numRows; row++)
-                        {
+                        {   // Parse and rearrange bytes into each byteList
                             tifData.ReadScanline(buf, row);
-                            byteList.AddRange(buf);
-                        }
-                        int bytesPerItem = 32 / 8;
-                        List<float> floatList = new List<float>();
-                        for(int byteIdx=0; byteIdx < byteList.Count; byteIdx+=bytesPerItem)
-                        {
-                            // Extract four bytes starting from byteIdx
-                            byte[] bytes = byteList.Skip(byteIdx).Take(bytesPerItem).ToArray();
 
-                            // Convert the extracted bytes to a single float
-                            float singleFloat = BitConverter.ToSingle(bytes, 0);
-                            floatList.Add(singleFloat);
+                            for(int position = 0; position < bytesToRead; position++)
+                            {
+                                dynamic tmp = buf[position];
+                                byteLists[position % valuesPerPixel].Add(buf[position]);
+                            }
+
                         }
-                        returnRaster.AddBand(floatList.Cast<dynamic>());
+                        string debugTemp = "88";
+                        bool ScanLineApproachSucceeded = false;
+                        foreach(List<Byte> aByteList in byteLists)
+                        {
+                            bool isAllZeroes = aByteList.All(val => val == 0);
+                            if(!isAllZeroes)
+                            {
+                                ScanLineApproachSucceeded = true;
+                                break;
+                            }
+                        }
+                        if(!ScanLineApproachSucceeded)
+                        {
+                            tryReadingAsBlocks(tifData, returnRaster);
+                            throw new Exception("ScanLineApproachSucceeded failed.");
+                            // return tryReadAsBlocks();
+                        }
+                        foreach (List<Byte> aByteList in byteLists)
+                        {
+                            returnRaster.AddBand(aByteList.ToArray(),
+                            returnRaster.CellDataType);
+                        }
+                        string dbg = "debugging";
+                        //int bytesPerItem = 32 / 8;
+                        //List<float> floatList = new List<float>();
+                        //for(int byteIdx=0; byteIdx < byteList.Count; byteIdx+=bytesPerItem)
+                        //{
+                        //    // Extract four bytes starting from byteIdx
+                        //    byte[] bytes = byteList.Skip(byteIdx).Take(bytesPerItem).ToArray();
+
+                        //    // Convert the extracted bytes to a single float
+                        //    float singleFloat = BitConverter.ToSingle(bytes, 0);
+                        //    floatList.Add(singleFloat);
+                        //}
+                        //returnRaster.AddBand(floatList.Cast<dynamic>());
                     }
                     else if (PlanarConfig.CONTIG == PlanarConfig.SEPARATE)
-                    {
+                    {  // SEPARATE is planar -- one strip per band -- rarely used
                         //value = image.GetField(TiffTag.SAMPLESPERPIXEL);
                         short spp = (short)returnRaster.SamplesPerPixel;
 
@@ -272,7 +320,7 @@ namespace GeoTBelt.GeoTiff
                 if(sampleFormat == (short)GeoTiffRaster.BPS_SignedInteger)
                     return Type.GetType("System.Int32"); // CellDataTypeEnum.Int32;
                 if (sampleFormat == (short)GeoTiffRaster.BPS_IEEEFP)
-                    return Type.GetType("System.Float"); //CellDataTypeEnum.Float;
+                    return Type.GetType("System.Single"); //CellDataTypeEnum.Float;
                 return null; // CellDataTypeEnum.Unknown;
             }
             if(bitsPerSample == 64)
@@ -281,6 +329,24 @@ namespace GeoTBelt.GeoTiff
                 // There is no combination which would return Long or ULong.
             }
             return null; // CellDataTypeEnum.Unknown;
+        }
+
+        protected static void tryReadingAsBlocks(Tiff tifData, GeoTiffRaster rstr)
+        {
+            //rstr.TileByteCounts
+            List<byte[]> byteBlocks = new List<byte[]>();
+            byte[] buf;
+            for (int y = 0; y < rstr.numRows; y+=(int)rstr.TileLength)
+            {
+                for(int x = 0; x < rstr.numColumns; x += (int)rstr.TileWidth)
+                {
+                    buf = new byte[(int)rstr.TileSize];
+                    tifData.ReadTile(buf, 0, x, y, 0, 0);
+                    byteBlocks.Add(buf);
+                }
+            }
+
+            throw new NotImplementedException();
         }
 
         private dynamic? imageGetField(Tiff img, TiffTag tag)
@@ -405,13 +471,11 @@ namespace GeoTBelt.GeoTiff
 
             returnDict["TileWidth"] = tif.GetAsShort("TileWidth");
             returnDict["TileLength"] = tif.GetAsShort("TileLength");
-            //"TileOffsets"
             returnDict["TileOffsets"] = tif.GetAsLongArray("TileOffsets");
-            //"TileByteCounts"
             returnDict["TileByteCounts"] = tif.GetAsLongArray("TileByteCounts");
-            //"ExtraSamples"
+            returnDict["TileWidth"] = tif.GetAsInt("TileWidth");
+            returnDict["TileLength"] = tif.GetAsInt("TileLength");
             returnDict["ExtraSamples"] = tif.GetAsShort("ExtraSamples");
-            //"SampleFormat"
             returnDict["SampleFormat"] = tif.GetAsShort("SampleFormat");
 
             #region Geospatial tags
@@ -472,12 +536,17 @@ namespace GeoTBelt.GeoTiff
             returnDict["GDAL_METADATA"] = tif.GetAsString("GDAL_METADATA");
 
             //"GDAL_NODATA"
-            string noDataString = tif.GetAsString("GDAL_NODATA").Trim();
-            if (noDataString.Contains("\0"))
+            string noDataString = tif.GetAsString("GDAL_NODATA");
+            if(noDataString is not null)
             {
-                noDataString = noDataString.Remove(noDataString.Length - 1, 1);
+                noDataString = noDataString.Trim();
+                if (noDataString.Contains("\0"))
+                {
+                    noDataString = noDataString.Remove(noDataString.Length - 1, 1);
+                }
+                returnDict["GDAL_NODATA"] = noDataString;
+
             }
-            returnDict["GDAL_NODATA"] = noDataString;
 
             #endregion Geospatial tags
 
@@ -490,6 +559,7 @@ namespace GeoTBelt.GeoTiff
             return returnDict;
         }
 
+        // Non-production code. For understanding what is going on.
         private static void ExploreTiff(Tiff tif, string varName)
         {
             int id = AllTags.Tag(varName).IdInteger;

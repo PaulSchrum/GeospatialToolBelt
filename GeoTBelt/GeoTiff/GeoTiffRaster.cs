@@ -19,6 +19,9 @@ namespace GeoTBelt.GeoTiff
         public int? PlanarConfiguration { get; internal set; }
         public long[]? TileOffsets { get; internal set; }
         public long[]? TileByteCounts { get; internal set; }
+        public long? TileWidth { get; internal set; }
+        public long? TileLength { get; internal set; }
+        public long? TileSize { get; internal set; }
         public int? SampleFormat { get; internal set; }
 
         internal GeoTiffRaster() { }

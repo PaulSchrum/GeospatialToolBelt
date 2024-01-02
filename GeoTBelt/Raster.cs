@@ -269,6 +269,13 @@ namespace GeoTBelt
             this.bands.Add(newBand);
         }
 
+        public void AddBand(Byte[] rawDataAsBytes, Type aType)
+        {
+            Band newBand = 
+                new Band(this, rawDataAsBytes, aType, this.numRows, this.numColumns);
+            this.bands.Add((Band)newBand);
+        }
+
         private dynamic? imageGetField(Tiff img, TiffTag tag)
         {
             FieldValue[] value = img.GetField(tag);
