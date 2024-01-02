@@ -346,6 +346,52 @@ namespace GeoTBelt.GeoTiff
                 }
             }
 
+            var flattenedArray = byteBlocks.SelectMany(tile => tile).ToArray();
+            int flattenedArrayLength = flattenedArray.Length;
+
+            #region ForDevDiagnostics
+            // Not needed to run in production; only when figuring out how
+            // to understand this data structure.
+            //List<Range> zerosRanges = new List<Range>();
+            //int aStart = 0; int anEnd = 0;
+            //for(int idx = 0; idx < flattenedArray.Length; idx++)
+            //{
+            //    if (flattenedArray[idx] == 0)
+            //    {
+            //        anEnd = idx;
+            //    }
+            //    else
+            //    {
+            //        if(anEnd == idx - 1)
+            //        {
+            //            zerosRanges.Add(new Range(aStart, anEnd));
+            //        }
+            //        aStart = idx;
+            //    }
+            //}
+
+            //Range r1 = zerosRanges[1];
+            //var v = r1.End.Value - r1.Start.Value;
+            //var v2 = zerosRanges[14].End.Value - zerosRanges[14].Start.Value;
+
+            //int before = zerosRanges.Count;
+
+            //zerosRanges = zerosRanges
+            //    .Where(r => (r.End.Value - r.Start.Value) > 1)
+            //    .ToList();
+            //int after = zerosRanges.Count;
+            //var zeroRangeSizes = zerosRanges
+            //    .Select(r => r.End.Value - r.Start.Value).ToList();
+
+            //bool allAre210 = zeroRangeSizes.All(s => s == 210);
+            //List<int> not210 = zeroRangeSizes.Where(s => s != 210).ToList();
+            //bool allTheseAreSame = not210.All(s => s == not210[0]);
+            //int countOf210Span = zeroRangeSizes.Count(s => s == 210);
+            //int countOf81280 = zeroRangeSizes.Count(s => s == 81280);
+            //int sumCount = countOf210Span + countOf81280;
+            #endregion ForDevDiagnostics
+
+            int i = 09;
             throw new NotImplementedException();
         }
 
