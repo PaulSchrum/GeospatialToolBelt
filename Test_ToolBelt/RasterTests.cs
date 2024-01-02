@@ -197,7 +197,8 @@ namespace Test_ToolBelt
             {
                 geoTiffFileName_5BandLarge = "NCSU Jordan Hall uncomp.tif";
                 geoTiffFileFullPath_5BandLarge = Path.Combine(currentDirectory, geoTiffFileName_5BandLarge);
-                geoTiffRaster_5BandLarge = (GeoTiffRaster)Raster.Load(geoTiffFileFullPath_5BandLarge);
+                geoTiffRaster_5BandLarge = (GeoTiffRaster)
+                    Raster.Load(geoTiffFileFullPath_5BandLarge);
             }
         }
 
