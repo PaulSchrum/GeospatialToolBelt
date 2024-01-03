@@ -333,7 +333,23 @@ namespace GeoTBelt.GeoTiff
 
         protected static void tryReadingAsBlocks(Tiff tifData, GeoTiffRaster rstr)
         {
-            //rstr.TileByteCounts
+            int rasterColumns = rstr.numColumns; // Pixel columns in the raster
+            int rasterRows = rstr.numRows;     // Pixel rows in the raster
+
+            int columnsPerTile = (int)rstr.TileWidth; // Pixel columns in a tile
+            int rowsPerTile = (int)rstr.TileLength; // Pixel rows in a tile
+
+            int tileColumnCount = (int) (rasterColumns / columnsPerTile); // Columns of tiles in a raster
+            int tileRowCount = (int) (rasterRows / rowsPerTile);  // Rows of tiles in a raster
+
+            int lastTilePixelColumns = rasterColumns % columnsPerTile; 
+            int lastTilePixelRows = rasterRows % rowsPerTile;
+
+            int lastTileColumnOverhang = columnsPerTile - lastTilePixelColumns;
+            int bandCount = 5;
+            int lastTileBandColumnsOverhang = lastTileColumnOverhang * bandCount;
+            int lastTileRowOverhang = rowsPerTile - lastTilePixelRows;
+
             List<byte[]> byteBlocks = new List<byte[]>();
             byte[] buf;
             for (int y = 0; y < rstr.numRows; y+=(int)rstr.TileLength)
@@ -345,50 +361,83 @@ namespace GeoTBelt.GeoTiff
                     byteBlocks.Add(buf);
                 }
             }
-
+            var tileSize = rstr.TileSize;
+            var tileWidth = rstr.TileWidth;
+            var columnCnt = rstr.numColumns;
             var flattenedArray = byteBlocks.SelectMany(tile => tile).ToArray();
             int flattenedArrayLength = flattenedArray.Length;
+
+            int cellCount = rstr.numRows * rstr.numColumns;
+            int cellSizeInBytes = (int) rstr.BitsPerSample / 8;
+            int numBands = (int) rstr.SamplesPerPixel;
+            int cellBlockSize = cellSizeInBytes * numBands;
+            int numCells = cellCount * cellSizeInBytes;
+            numCells = rstr.numRows * rstr.numColumns;
+            List<dynamic[]> bandArrays = new List<dynamic[]>();
+            for(int idx = 0; idx < numBands; idx++)
+            {
+                bandArrays.Add(new dynamic[numCells]);
+            }
+
+            //int rasterSizeInBytes = cellCount * numBands;
+            //int stepSize = cellSizeInBytes;
+            //for(int row = 0; row < rstr.numRows; row++)
+            //{
+            //    int rowStart = row * rstr.numColumns;
+            //    for(int col = 0; col < rstr.numColumns; col++)
+            //    {
+            //        int linearIndex = rowStart + col;
+            //        int flattenedIndex = linearIndex * cellBlockSize;
+            //        for(int bandIdx = 0; bandIdx < numBands; bandIdx++)
+            //        {
+            //            dynamic[] aBandArray = bandArrays[bandIdx];
+            //            aBandArray[linearIndex] = flattenedArray[flattenedIndex + bandIdx];
+            //        }
+            //    }
+            //}
+            //int stopHere = 1;
 
             #region ForDevDiagnostics
             // Not needed to run in production; only when figuring out how
             // to understand this data structure.
-            //List<Range> zerosRanges = new List<Range>();
-            //int aStart = 0; int anEnd = 0;
-            //for(int idx = 0; idx < flattenedArray.Length; idx++)
-            //{
-            //    if (flattenedArray[idx] == 0)
-            //    {
-            //        anEnd = idx;
-            //    }
-            //    else
-            //    {
-            //        if(anEnd == idx - 1)
-            //        {
-            //            zerosRanges.Add(new Range(aStart, anEnd));
-            //        }
-            //        aStart = idx;
-            //    }
-            //}
+            //
+            List<Range> zerosRanges = new List<Range>();
+            int aStart = 0; int anEnd = 0;
+            for (int idx = 0; idx < flattenedArray.Length; idx++)
+            {
+                if (flattenedArray[idx] == 0)
+                {
+                    anEnd = idx;
+                }
+                else
+                {
+                    if (anEnd == idx - 1)
+                    {
+                        zerosRanges.Add(new Range(aStart, anEnd));
+                    }
+                    aStart = idx;
+                }
+            }
 
-            //Range r1 = zerosRanges[1];
-            //var v = r1.End.Value - r1.Start.Value;
-            //var v2 = zerosRanges[14].End.Value - zerosRanges[14].Start.Value;
+            Range r1 = zerosRanges[1];
+            var v = r1.End.Value - r1.Start.Value;
+            var v2 = zerosRanges[14].End.Value - zerosRanges[14].Start.Value;
 
-            //int before = zerosRanges.Count;
+            int before = zerosRanges.Count;
 
-            //zerosRanges = zerosRanges
-            //    .Where(r => (r.End.Value - r.Start.Value) > 1)
-            //    .ToList();
-            //int after = zerosRanges.Count;
-            //var zeroRangeSizes = zerosRanges
-            //    .Select(r => r.End.Value - r.Start.Value).ToList();
+            zerosRanges = zerosRanges
+                .Where(r => (r.End.Value - r.Start.Value) > 1)
+                .ToList();
+            int after = zerosRanges.Count;
+            var zeroRangeSizes = zerosRanges
+                .Select(r => r.End.Value - r.Start.Value).ToList();
 
-            //bool allAre210 = zeroRangeSizes.All(s => s == 210);
-            //List<int> not210 = zeroRangeSizes.Where(s => s != 210).ToList();
-            //bool allTheseAreSame = not210.All(s => s == not210[0]);
-            //int countOf210Span = zeroRangeSizes.Count(s => s == 210);
-            //int countOf81280 = zeroRangeSizes.Count(s => s == 81280);
-            //int sumCount = countOf210Span + countOf81280;
+            bool allAre210 = zeroRangeSizes.All(s => s == 210);
+            List<int> not210 = zeroRangeSizes.Where(s => s != 210).ToList();
+            bool allTheseAreSame = not210.All(s => s == not210[0]);
+            int countOf210Span = zeroRangeSizes.Count(s => s == 210);
+            int countOf81280 = zeroRangeSizes.Count(s => s == 81280);
+            int sumCount = countOf210Span + countOf81280;
             #endregion ForDevDiagnostics
 
             int i = 09;
