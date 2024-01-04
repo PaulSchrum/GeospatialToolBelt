@@ -124,5 +124,29 @@ namespace Test_ToolBelt
             Assert.AreEqual(expected: eLastTileRowRemainder,
                             actual: gridInstanceLocal.lastTileRowRemainder);
         }
+
+        [TestMethod]
+        public void GridInstance_ConversionsAreCorrect()
+        {
+            var result = gridInstance1.AsTiledCoordinates(3, 4);
+            Assert.AreEqual(expected: 0, actual: result.TileColumn);
+            Assert.AreEqual(expected: 0, actual: result.TileRow);
+            Assert.AreEqual(expected: 3, actual: result.subTileColumn);
+            Assert.AreEqual(expected: 4, actual: result.subTileRow);
+
+
+            // Start here. This is wrong. Get it right.
+            result = gridInstance1.AsTiledCoordinates(15, 15);
+            Assert.AreEqual(expected: 1, actual: result.TileColumn);
+            Assert.AreEqual(expected: 1, actual: result.TileRow);
+            Assert.AreEqual(expected: 5, actual: result.subTileColumn);
+            Assert.AreEqual(expected: 6, actual: result.subTileRow);
+
+            result = gridInstance1.AsTiledCoordinates(28-2, 23-2);
+            Assert.AreEqual(expected: 3, actual: result.TileColumn);
+            Assert.AreEqual(expected: 3, actual: result.TileRow);
+            Assert.AreEqual(expected: 6, actual: result.subTileColumn);
+            Assert.AreEqual(expected: 3, actual: result.subTileRow);
+        }
     }
 }

@@ -54,8 +54,28 @@ namespace GeoTBelt.Grid
             return new RasterCoordinates(column, row);
         }
 
+        public TiledCoordinates AsTiledCoordinates(int col, int row)
+        {
+            return AsTiledCoordinates(new RasterCoordinates(col, row));
+        }
+
         public TiledCoordinates AsTiledCoordinates(RasterCoordinates rasterCoordinates)
-        { throw new NotImplementedException(); }
+        {
+            int tileCol; int tileRow; int tileSubCol; int tileSubRow;
+            int col = rasterCoordinates.column;  // Just an alias for shorter lines of code
+            int row = rasterCoordinates.row;
+
+            if (col >= this.rasterColumns || row >= this.rasterRows)
+                throw new ArgumentException();
+
+            tileCol = col / this.rasterColumns;
+            tileRow = row / this.rasterRows;
+
+            tileSubCol = col % this.rasterColumns;
+            tileSubRow = row % this.rasterRows;
+
+            return new TiledCoordinates(tileCol, tileRow, tileSubCol, tileSubRow); 
+        }
 
         public TiledCoordinates AsTiledCoordinates(int  arrayIndex)
         { throw new NotImplementedException(); }
