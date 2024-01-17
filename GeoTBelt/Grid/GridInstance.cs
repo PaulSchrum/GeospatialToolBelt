@@ -68,11 +68,11 @@ namespace GeoTBelt.Grid
             if (col >= this.rasterColumns || row >= this.rasterRows)
                 throw new ArgumentException();
 
-            tileCol = col / this.rasterColumns;
-            tileRow = row / this.rasterRows;
+            tileCol = col / this.columnsPerTile;
+            tileRow = row / this.rowsPerTile;
 
-            tileSubCol = col % this.rasterColumns;
-            tileSubRow = row % this.rasterRows;
+            tileSubCol = col % this.columnsPerTile;
+            tileSubRow = row % this.rowsPerTile;
 
             return new TiledCoordinates(tileCol, tileRow, tileSubCol, tileSubRow); 
         }
@@ -91,12 +91,15 @@ namespace GeoTBelt.Grid
         {
             if (rasterCoordinates == null) return -1;
             var r = rasterCoordinates;  // aliasing for convenience
-            if(r.column > this.rasterColumns) throw new IndexOutOfRangeException();
-            if(r.row > this.rasterRows) throw new IndexOutOfRangeException();
+            if(r.column >= this.rasterColumns) throw new IndexOutOfRangeException();
+            if(r.row >= this.rasterRows) throw new IndexOutOfRangeException();
 
             return r.row * this.rasterColumns + r.column;
         }
 
-
+        public int AsArrayIndex(int v1, int v2)
+        {
+            return AsArrayIndex(new RasterCoordinates(v1, v2));
+        }
     }
 }
