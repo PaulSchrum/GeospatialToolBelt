@@ -134,8 +134,6 @@ namespace Test_ToolBelt
             Assert.AreEqual(expected: 3, actual: result.subTileColumn);
             Assert.AreEqual(expected: 4, actual: result.subTileRow);
 
-
-            // Start here. This is wrong. Get it right.
             result = gridInstance1.AsTiledCoordinates(15, 15);
             Assert.AreEqual(expected: 1, actual: result.TileColumn);
             Assert.AreEqual(expected: 1, actual: result.TileRow);
@@ -143,10 +141,24 @@ namespace Test_ToolBelt
             Assert.AreEqual(expected: 6, actual: result.subTileRow);
 
             result = gridInstance1.AsTiledCoordinates(28-2, 23-2);
-            Assert.AreEqual(expected: 3, actual: result.TileColumn);
-            Assert.AreEqual(expected: 3, actual: result.TileRow);
+            Assert.AreEqual(expected: 2, actual: result.TileColumn);
+            Assert.AreEqual(expected: 2, actual: result.TileRow);
             Assert.AreEqual(expected: 6, actual: result.subTileColumn);
             Assert.AreEqual(expected: 3, actual: result.subTileRow);
+        }
+
+        [TestMethod]
+        public void GridInstance_ConversionsTo1Darray_areCorrect()
+        {
+            var result = gridInstance1.AsArrayIndex(28 - 2, 23-1);
+            Assert.AreEqual(expected: 642, actual: result);
+        }
+
+        [TestMethod]
+        public void GridInstance_ConversionTo1Darray_columnOOB_throws()
+        {
+            Assert.ThrowsException<IndexOutOfRangeException>
+                (()=> gridInstance1.AsArrayIndex(28, 23));
         }
     }
 }
