@@ -46,6 +46,12 @@ namespace GeoTBelt.Grid
             throw new NotImplementedException();
         }
 
+        public RasterCoordinates AsRasterCoordinates(
+            int tileCol, int tileRow, int subCol, int subRow)
+        {
+            throw new NotImplementedException();
+        }
+
         public RasterCoordinates AsRasterCoordinates(int arrayIndex)
         {
             int row = (int) (arrayIndex / rasterColumns);
@@ -77,14 +83,28 @@ namespace GeoTBelt.Grid
             return new TiledCoordinates(tileCol, tileRow, tileSubCol, tileSubRow); 
         }
 
-        public TiledCoordinates AsTiledCoordinates(int  arrayIndex)
+        public TiledCoordinates AsTiledCoordinates(int arrayIndex)
         { throw new NotImplementedException(); }
+
+        public int TileSequentialCountFrom(int tileCol, int tileRow)
+        {
+            int wholeRowsPart = (tileRow * this.tileColumns);
+            int t = wholeRowsPart + tileCol;
+            return wholeRowsPart + tileCol;
+        }
 
         public int AsArrayIndex(TiledCoordinates tileCoordinates) 
         { 
             
             
             throw new NotImplementedException(); 
+        }
+
+        public int AsArrayIndex(int tileCol, int tileRow, int subCol, int subRow)
+        {
+            RasterCoordinates rstsCoord = 
+                AsRasterCoordinates(tileCol, tileRow, subCol, subRow);
+            return AsArrayIndex(rstsCoord);
         }
 
         public int AsArrayIndex(RasterCoordinates rasterCoordinates)
@@ -97,9 +117,9 @@ namespace GeoTBelt.Grid
             return r.row * this.rasterColumns + r.column;
         }
 
-        public int AsArrayIndex(int v1, int v2)
+        public int AsArrayIndex(int column, int row)
         {
-            return AsArrayIndex(new RasterCoordinates(v1, v2));
+            return AsArrayIndex(new RasterCoordinates(column, row));
         }
     }
 }

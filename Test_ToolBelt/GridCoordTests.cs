@@ -12,6 +12,7 @@ namespace Test_ToolBelt
     public class GridCoordTests
     {
         private GridInstance gridInstance1 = default;
+        private GridInstance gridInstance2 = default;
 
         [TestInitialize]
         public void Setup()
@@ -22,6 +23,12 @@ namespace Test_ToolBelt
                 columnsPerTile: 10,
                 rowsPerTile: 9
                 );
+
+            gridInstance2 = new GridInstance(
+                rasterColumns: 10*4,
+                rasterRows: 10*4,
+                columnsPerTile: 10,
+                rowsPerTile: 10 );
         }
 
         [TestMethod]
@@ -123,6 +130,14 @@ namespace Test_ToolBelt
 
             Assert.AreEqual(expected: eLastTileRowRemainder,
                             actual: gridInstanceLocal.lastTileRowRemainder);
+        }
+
+        [TestMethod]
+        public void GridInstance_TestSequentialTileConversion()
+        {
+            int expectedSequentialIndex = 9;
+            int actualSequentialIndex = gridInstance2.TileSequentialCountFrom(1, 2);
+            Assert.AreEqual(expected: expectedSequentialIndex, actual: actualSequentialIndex);
         }
 
         [TestMethod]
