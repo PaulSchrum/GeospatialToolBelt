@@ -1,4 +1,5 @@
 ﻿using BitMiracle.LibTiff.Classic;
+using GeoTBelt.Grid;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -185,7 +186,7 @@ namespace GeoTBelt.GeoTiff
                 #endregion GeoTiffRaster tags
 
                 #region Read data bands
-                int bytesPerValue = (int) returnRaster.BitsPerSample;
+                int bytesPerValue = (int) returnRaster.BitsPerSample / 8;
                 int valuesPerPixel = (int)returnRaster.SamplesPerPixel;
                     
                 returnRaster.CellDataType = 
@@ -229,14 +230,14 @@ namespace GeoTBelt.GeoTiff
                         }
                         if(!ScanLineApproachSucceeded)
                         {
-                            tryReadingAsBlocks(tifData, returnRaster);
+                            tryReadingAsTiles(tifData, returnRaster);
                             throw new Exception("ScanLineApproachSucceeded failed.");
                             // return tryReadAsBlocks();
                         }
                         foreach (List<Byte> aByteList in byteLists)
                         {
                             returnRaster.AddBand(aByteList.ToArray(),
-                            returnRaster.CellDataType);
+                                    returnRaster.CellDataType);
                         }
                         string dbg = "debugging";
                         //int bytesPerItem = 32 / 8;
@@ -278,7 +279,7 @@ namespace GeoTBelt.GeoTiff
 
                 int[] rstr;
                 int numBands = (int)tags["SamplesPerPixel"];
-                var directoryCount = tifData.NumberOfDirectories();
+                var directoryCount = tifData.NumberOfDirectories();  // still exploratory code
                 for (int i = 0; i < directoryCount; i++)
                 {
                     rstr = new int[imageSize * numBands];
@@ -331,27 +332,96 @@ namespace GeoTBelt.GeoTiff
             return null; // CellDataTypeEnum.Unknown;
         }
 
-        protected static void tryReadingAsBlocks(Tiff tifData, GeoTiffRaster rstr)
+        protected static void tryReadingAsTiles(Tiff tifData, GeoTiffRaster rstr)
         {
+            int bytesPerValue = (int)rstr.BitsPerSample / 8;
+            int bandCount = (int)rstr.SamplesPerPixel;
+
             int rasterColumns = rstr.numColumns; // Pixel columns in the raster
             int rasterRows = rstr.numRows;     // Pixel rows in the raster
 
             int columnsPerTile = (int)rstr.TileWidth; // Pixel columns in a tile
             int rowsPerTile = (int)rstr.TileLength; // Pixel rows in a tile
 
-            int tileColumnCount = (int) (rasterColumns / columnsPerTile); // Columns of tiles in a raster
-            int tileRowCount = (int) (rasterRows / rowsPerTile);  // Rows of tiles in a raster
+            int tileColumnCount = 1 + (int) (rasterColumns / columnsPerTile); // Columns of tiles in a raster
+            int tileRowCount = 1 + (int) (rasterRows / rowsPerTile);  // Rows of tiles in a raster
 
             int lastTilePixelColumns = rasterColumns % columnsPerTile; 
             int lastTilePixelRows = rasterRows % rowsPerTile;
 
             int lastTileColumnOverhang = columnsPerTile - lastTilePixelColumns;
-            int bandCount = 5;
             int lastTileBandColumnsOverhang = lastTileColumnOverhang * bandCount;
             int lastTileRowOverhang = rowsPerTile - lastTilePixelRows;
+            int pixelCount = rasterRows * rasterColumns;
+            int byteCount = pixelCount * bytesPerValue;
+            for (int bandId = 0; bandId < bandCount; bandId++)
+            {
+                Byte[] byteBlock = new Byte[byteCount];
+                rstr.AddBand(byteBlock, rstr.CellDataType);
+            }
 
+            GridInstance grd =
+                new GridInstance(rasterColumns: rasterColumns,
+                rasterRows: rasterRows, columnsPerTile: columnsPerTile,
+                rowsPerTile: rowsPerTile);
+
+            //tifData.ReadTile(new byte[4], 0, 0, 0, 0, 0);
+            byte[] buffer = new byte[columnsPerTile * rowsPerTile * bandCount];
+            int bufferLength = buffer.Length;
+
+            int destinationIndex = 0;
+            int subPixelCounter = 0;
+            int subPixelStepSize = (int) rstr.BitsPerSample / 8;
+            byte[] buf = new byte[columnsPerTile * rowsPerTile * bandCount];
+            int tileCounter = -1;
+            for (int tileRow = 0; tileRow < tileRowCount; tileRow++)
+            {
+                for (int tileColumn = 0; tileColumn < tileColumnCount; tileColumn++)
+                {
+                    tileCounter++;
+                    tifData.ReadTile(buf, 0, tileColumn, tileRow, 0, 0);
+                    for(int bdx=0; bdx < bandCount; bdx++)
+                    { // Note: This code builds but does not work. 
+                        //var byteArrayDestination =
+                        //    (rstr.bands[bdx].CellArray) as byte[];
+                        //Buffer.BlockCopy(buf, subPixelCounter,
+                        //    byteArrayDestination, destinationIndex, subPixelCounter);
+                    }
+                }
+            }
+
+            ////
+            //for(int tileColumn=0; tileColumn < tileColumnCount; tileColumn++)
+            //{
+            //    for(int tileRow=0; tileRow < tileRowCount; tileRow++)
+            //    {
+            //        for(int subCol=0; subCol< columnsPerTile; subCol++)
+            //        {
+            //            for(int subRow=0; subRow < rowsPerTile; subRow++)
+            //            {
+            //                byte[] buf = new byte[4];
+            //                tifData.ReadTile(buf, 0, rasterColumn, rasterRow, 0, 0);
+            //                int i = 0;
+            //            }
+            //        }
+            //    }
+            //}
+
+            ////
+
+            //int rasterColumn = tileColumn * columnsPerTile + subCol;
+            //int rasterRow = tileRow * rowsPerTile + subRow;
+            //int rasterIndex = rasterRow * rasterColumns + rasterColumn;
+            //int tileIndex = subRow * columnsPerTile + subCol;
+            //int tileOffset = tileIndex * bandCount;
+            //int tileByteOffset = tileOffset * 4;
+            //int rasterByteOffset = rasterIndex * 4;
+
+
+            // Starting here
+            // Rework logic to use the new Tiled coordinate system framework I developed.
             List<byte[]> byteBlocks = new List<byte[]>();
-            byte[] buf;
+
             for (int y = 0; y < rstr.numRows; y+=(int)rstr.TileLength)
             {
                 for(int x = 0; x < rstr.numColumns; x += (int)rstr.TileWidth)
