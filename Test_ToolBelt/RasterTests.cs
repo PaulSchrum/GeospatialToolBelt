@@ -11,7 +11,7 @@ namespace Test_ToolBelt
 
         private static string ascTestFileName;
         private static string ascTestFileFullPath;
-        private static Raster ascRaster;
+        private static Raster<float> ascRaster;
         private static string ascOutputTestFile;
         private static string ascOutputTestFileFullPath;
 
@@ -36,7 +36,7 @@ namespace Test_ToolBelt
                 pathAsList = pathAsList.Take(pathAsList.Count - 3).ToList();
                 //currentDirectory = string.Join("\\", pathAsList);
                 ascTestFileFullPath = Path.Combine(currentDirectory, ascTestFileName);
-                ascRaster = Raster.Load(ascTestFileFullPath);
+                ascRaster = Raster<float>.Load(ascTestFileFullPath);
             }
 
         }

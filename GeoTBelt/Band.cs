@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Security.AccessControl;
 using System.Text;
 using System.Threading.Tasks;
@@ -11,9 +12,21 @@ namespace GeoTBelt
 {
     public class Band
     {
-        public dynamic[] CellArray { get; protected set; }
+        protected dynamic[] tempCellArray { get; set; }
         public Raster MyParent { get; protected set; }
         public Type theType { get; set; } = typeof(double);
+
+        private int theTypeSize_ = 0;
+        public int theTypeSize 
+        { 
+            get
+            {
+                if(theTypeSize_ == 0)
+                    theTypeSize_ = Marshal.SizeOf(theType);
+                return theTypeSize_;
+            }
+        }
+        public Byte[] CellArray { get; protected set; }
 
         private Band() { }
 
@@ -21,14 +34,14 @@ namespace GeoTBelt
         { 
             MyParent = parent;
             theType = null;
-            CellArray = null;
+            tempCellArray = null;
         }
 
         public Band(Raster parent, dynamic[] dataFrame, Type type,
             int numRows, int numCols)
             : this(parent)
         {
-            CellArray = dataFrame;
+            tempCellArray = dataFrame;
             theType = type;
         }
 
@@ -41,75 +54,114 @@ namespace GeoTBelt
             int numCells = dataFrameAsBytes.Length / typeSize;
             if (theType.Equals(typeof(Byte)))
             {
-                CellArray = dataFrameAsBytes.Cast<dynamic>().ToArray();
+                tempCellArray = dataFrameAsBytes.Cast<dynamic>().ToArray();
             }
             else if(theType.Equals(typeof(System.UInt16)))
             {
                 // how assign dataFramAsBytes to CellArray using BitConverter?
-                CellArray = new dynamic[numCells];
+                tempCellArray = new dynamic[numCells];
                 for (int i = 0; i < numCells; i++)
                 {
-                    CellArray[i] =  BitConverter.ToUInt16(dataFrameAsBytes, i * typeSize);
+                    tempCellArray[i] =  BitConverter.ToUInt16(dataFrameAsBytes, i * typeSize);
                 }
             }
             else if (theType.Equals(typeof(System.Int16)))
             {
-                CellArray = new dynamic[numCells];
+                tempCellArray = new dynamic[numCells];
                 for (int i = 0; i < numCells; i++)
                 {
-                    CellArray[i] = BitConverter.ToInt16(dataFrameAsBytes, i * typeSize);
+                    tempCellArray[i] = BitConverter.ToInt16(dataFrameAsBytes, i * typeSize);
                 }
             }
             else if (theType.Equals(typeof(System.UInt32)))
             {
-                CellArray = new dynamic[numCells];
+                tempCellArray = new dynamic[numCells];
                 for (int i = 0; i < numCells; i++)
                 {
-                    CellArray[i] = BitConverter.ToUInt32(dataFrameAsBytes, i * typeSize);
+                    tempCellArray[i] = BitConverter.ToUInt32(dataFrameAsBytes, i * typeSize);
                 }
             }
             else if (theType.Equals(typeof(System.Int32)))
             {
-                CellArray = new dynamic[numCells];
+                tempCellArray = new dynamic[numCells];
                 for (int i = 0; i < numCells; i++)
                 {
-                    CellArray[i] = BitConverter.ToInt32(dataFrameAsBytes, i * typeSize);
+                    tempCellArray[i] = BitConverter.ToInt32(dataFrameAsBytes, i * typeSize);
                 }
             }
             else if (theType.Equals(typeof(System.UInt64)))
             {
-                CellArray = new dynamic[numCells];
+                tempCellArray = new dynamic[numCells];
                 for (int i = 0; i < numCells; i++)
                 {
-                    CellArray[i] = BitConverter.ToUInt64(dataFrameAsBytes, i * typeSize);
+                    tempCellArray[i] = BitConverter.ToUInt64(dataFrameAsBytes, i * typeSize);
                 }
             }
             else if (theType.Equals(typeof(System.Int64)))
             {
-                CellArray = new dynamic[numCells];
+                tempCellArray = new dynamic[numCells];
                 for (int i = 0; i < numCells; i++)
                 {
-                    CellArray[i] = BitConverter.ToInt64(dataFrameAsBytes, i * typeSize);
+                    tempCellArray[i] = BitConverter.ToInt64(dataFrameAsBytes, i * typeSize);
                 }
             }
             else if (theType.Equals(typeof(System.Single)))
             {
-                CellArray = new dynamic[numCells];
+                tempCellArray = new dynamic[numCells];
                 for (int i = 0; i < numCells; i++)
                 {
-                    CellArray[i] = BitConverter.ToSingle(dataFrameAsBytes, i * typeSize);
+                    tempCellArray[i] = BitConverter.ToSingle(dataFrameAsBytes, i * typeSize);
                 }
             }
             else if (theType.Equals(typeof(System.Double)))
             {
-                CellArray = new dynamic[numCells];
+                tempCellArray = new dynamic[numCells];
                 for (int i = 0; i < numCells; i++)
                 {
-                    CellArray[i] = BitConverter.ToDouble(dataFrameAsBytes, i * typeSize);
+                    tempCellArray[i] = BitConverter.ToDouble(dataFrameAsBytes, i * typeSize);
                 }
             }
             
 
+        }
+
+        /// <summary>
+        /// Must be called after the dynamic[] tempCellArray has been populated.
+        /// This method takes the contents of tempCellArray and puts them in CellArray.
+        /// It then destructs tempCellArry so only CellArray holds the data.
+        /// </summary>
+        public void PopulatingIsComplete()
+        {
+            int rawArraySize = tempCellArray.Length * this.theTypeSize;
+            CellArray = new byte[rawArraySize];
+
+            for (int tempIdx = 0; tempIdx < tempCellArray.Length; tempIdx++)
+            {
+                int byteIdx = tempIdx * this.theTypeSize;
+                dynamic aCellValue = tempCellArray[tempIdx];
+
+                byte[] bytes;
+                if (theType == typeof(int))
+                {
+                    bytes = BitConverter.GetBytes((int)aCellValue);
+                }
+                else if (theType == typeof(float))
+                {
+                    bytes = BitConverter.GetBytes((float)aCellValue);
+                }
+                else if (theType == typeof(double))
+                {
+                    bytes = BitConverter.GetBytes((double)aCellValue);
+                }
+                else
+                {
+                    throw new InvalidOperationException($"Unsupported type {theType.FullName}");
+                }
+
+                Buffer.BlockCopy(bytes, 0, CellArray, byteIdx, bytes.Length);
+            }
+
+            tempCellArray = null;
         }
 
         /// <summary>
@@ -172,7 +224,14 @@ namespace GeoTBelt
         /// <returns></returns>
         public dynamic At(params int[] idx)
         {
-            return CellArray[IndexAsLinearArray(idx)];
+            return tempCellArray[IndexAsLinearArray(idx)];
+        }
+
+
+        public double GetAsDouble(params int[] idx) 
+        {
+            int rawIndex = IndexAsLinearArray(idx) * theTypeSize;
+            return BitConverter.ToDouble(CellArray, rawIndex);
         }
 
         /// <summary>
@@ -183,12 +242,12 @@ namespace GeoTBelt
         /// <param name="value"></param>
         public void Set(dynamic value, params int[] idx)
         {
-            CellArray[IndexAsLinearArray(idx)] = value;
+            tempCellArray[IndexAsLinearArray(idx)] = value;
         }
 
         public void CreateCellArray(int rowCount, int columnCount)
         {
-            CellArray = new dynamic[rowCount * columnCount];
+            tempCellArray = new dynamic[rowCount * columnCount];
         }
 
         public override string ToString()

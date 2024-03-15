@@ -23,7 +23,7 @@ namespace GeoTBelt.Grid
 
         public GridInstance(
             int rasterColumns, int rasterRows, 
-            int columnsPerTile, int rowsPerTile)
+            int columnsPerTile=Int32.MaxValue, int rowsPerTile=Int32.MaxValue)
         {
             this.rasterColumns = rasterColumns;
             this.rasterRows = rasterRows;

@@ -1,11 +1,13 @@
 ﻿using BitMiracle.LibTiff.Classic;
 using GeoTBelt.GeoTiff;
+using GeoTBelt.Grid;
 using System.Collections;
+using System.Runtime.InteropServices;
 //using static System.Net.Mime.MediaTypeNames;
 
 namespace GeoTBelt
 {
-    public class Raster
+    public class Raster<T> where T : struct
     {
         public double cellSize
         {
@@ -39,6 +41,8 @@ namespace GeoTBelt
         }
         
         private double? _cellSizeY = null;
+        private List<Pixel<T>> allPixels;
+
         public double cellSizeY 
         {
             get
@@ -61,7 +65,9 @@ namespace GeoTBelt
         public GTBpoint anchorPoint { get; internal set; } // upper left point of the raster
         public string NoDataValue { get; internal set; }
         internal Type CellDataType { get; set; } = null;
-        public List<Band> bands { get; internal set; } = new List<Band>();
+        internal List<Pixel<T?>> AllPixels { get; set; } = default;
+        internal GridInstance theGrid { get; private set; } = null;
+        //public List<Band> bands { get; internal set; } = new List<Band>();
 
 
         internal Raster() { }
@@ -73,7 +79,7 @@ namespace GeoTBelt
         /// <param name="format"></param>
         /// <returns></returns>
         /// <exception cref="ArgumentException"></exception>
-        public static Raster Load(string fullPath, string format = "")
+        public static Raster<T> Load(string fullPath, string format = "")
         {
             string fileType = format;
             if (string.IsNullOrEmpty(fileType))
@@ -82,7 +88,7 @@ namespace GeoTBelt
                 throw new ArgumentException
                     ("Could not determine file type from path or format parameter.");
 
-            Raster returnRaster = new Raster();
+            Raster<T> returnRaster = new Raster<T>();
 
             fileType = fileType.ToLower();
             if (fileType[0] == '.')
@@ -94,7 +100,7 @@ namespace GeoTBelt
             }
             else if (considerGeoTiff(fileType))
             {
-                returnRaster = GeoTiffHelper.ReadGeoTiff(fullPath);
+                //returnRaster = GeoTiffHelper.ReadGeoTiff(fullPath);
                     //.populateRasterFromTiffFile(fullPath);
             }
             else
@@ -106,11 +112,16 @@ namespace GeoTBelt
             return returnRaster;
         }
 
+        public int At(int column, int row)
+        {
+            return theGrid.AsArrayIndex(column, row);
+        }
+
         #region Asc Raster Format
         private void populateRasterFromAscFile(string path)
         {
-            this.bands.Add(new Band(this));
-            var band = this.bands[0];
+            //this.bands.Add(new Band(this));
+            //var band = this.bands[0];
 
             using (StreamReader sr = new StreamReader(path))
             {
@@ -163,11 +174,14 @@ namespace GeoTBelt
 
                 topYCoordinate = bottomYCoordinate + cellSize * numRows;
                 anchorPoint = new GTBpoint(leftXCoordinate, topYCoordinate);
-                band.theType = typeof(double);
+                //band.theType = typeof(double);
 
                 string line;
                 int rowCounter = -1;
                 bool arrayCreated = false;
+                theGrid = new GridInstance(rasterColumns: numColumns, rasterRows: numRows);
+                AllPixels = new List<Pixel<T?>>();
+                AllPixels.Capacity = numColumns * numRows;
                 while (true)
                 {
                     line = sr.ReadLine();
@@ -180,7 +194,10 @@ namespace GeoTBelt
                     {
                         columnCounter++;
                         if (entry == this.NoDataValue)
-                            band.Set(double.NaN, rowCounter, columnCounter);
+                        {
+                            Pixel<T?> aPixel = new Pixel<T?>(new T?[] { null });
+                            this.AllPixels[At(columnCounter, rowCounter)] = aPixel;
+                        }
                         else
                         {
                             if(!arrayCreated)
@@ -199,6 +216,7 @@ namespace GeoTBelt
                     }
                 }
 
+                band.PopulatingIsComplete();
             }
         }
 
