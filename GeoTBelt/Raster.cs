@@ -1,6 +1,9 @@
 ﻿using BitMiracle.LibTiff.Classic;
 using GeoTBelt.GeoTiff;
+using GeoTBelt.Grid;
 using System.Collections;
+using System.Data.Common;
+using System.Security.Cryptography.X509Certificates;
 //using static System.Net.Mime.MediaTypeNames;
 
 namespace GeoTBelt
@@ -60,8 +63,15 @@ namespace GeoTBelt
         public double topYCoordinate { get; internal set; }
         public GTBpoint anchorPoint { get; internal set; } // upper left point of the raster
         public string NoDataValue { get; internal set; }
-        internal Type CellDataType { get; set; } = null;
-        public List<Band> bands { get; internal set; } = new List<Band>();
+        public dynamic NoDataValDynamic { get; internal set; }
+        public int BandCount { get; internal set; } = 0;
+        public int TotalCellCount { get; internal set; }
+        public Type CellDataType { get; internal set; }
+        public int SingleCellDataLength { get; internal set; }
+        public int ByteArrayLength { get; protected set; }
+
+        protected Byte[] DataFrame { get; set; }
+        protected GridInstance grid { get; set; }
 
 
         internal Raster() { }
@@ -109,8 +119,7 @@ namespace GeoTBelt
         #region Asc Raster Format
         private void populateRasterFromAscFile(string path)
         {
-            this.bands.Add(new Band(this));
-            var band = this.bands[0];
+            this.BandCount++;
 
             using (StreamReader sr = new StreamReader(path))
             {
@@ -163,11 +172,17 @@ namespace GeoTBelt
 
                 topYCoordinate = bottomYCoordinate + cellSize * numRows;
                 anchorPoint = new GTBpoint(leftXCoordinate, topYCoordinate);
-                band.theType = typeof(double);
+
+                CellDataType = typeof(float);  // valid only for ASCII
+                NoDataValDynamic = convertStringToNumber(NoDataValue);
+                TotalCellCount = numColumns * numRows;
+                ByteArrayLength = 
+                    TotalCellCount * SingleCellDataLength * BandCount;
+                DataFrame = new Byte[ByteArrayLength];
+                grid = new GridInstance(numColumns, numRows);
 
                 string line;
                 int rowCounter = -1;
-                bool arrayCreated = false;
                 while (true)
                 {
                     line = sr.ReadLine();
@@ -179,22 +194,15 @@ namespace GeoTBelt
                     foreach (var entry in lineList)
                     {
                         columnCounter++;
+
                         if (entry == this.NoDataValue)
-                            band.Set(double.NaN, rowCounter, columnCounter);
+                        {
+                            setValue(this.NoDataValDynamic, columnCounter, rowCounter);
+                        }
                         else
                         {
-                            if(!arrayCreated)
-                            {
-                                band.CreateCellArray(numColumns, numRows);
-                                band.theType = numberParser(entry);
-                                arrayCreated = true;
-                            }
-                            if (band.theType == typeof(double))
-                                band.Set(double.Parse(entry), rowCounter, columnCounter);
-                            else if (band.theType == typeof(int))
-                                band.Set(int.Parse(entry), rowCounter, columnCounter);
-                            else // it's string or char. Can't handle complex.
-                                band.Set(entry, rowCounter, columnCounter);
+                            var value = convertStringToNumber(entry);
+                            setValue(value, columnCounter, rowCounter);
                         }
                     }
                 }
@@ -206,10 +214,10 @@ namespace GeoTBelt
         {
             if (inputValue.Contains("."))
             {
-                double _;
-                bool isDouble = Double.TryParse(inputValue, out _);
-                if (isDouble)
-                    return typeof(double);
+                float _;
+                bool isFloat = Single.TryParse(inputValue, out _);
+                if (isFloat)
+                    return typeof(Single);
             }
             else
             {
@@ -218,11 +226,163 @@ namespace GeoTBelt
                 if (isInt)
                     return typeof(int);
             }
+            // technical debt: Need to make a guess for Byte (i.e., char)
             if(inputValue.Length > 1)
                 return typeof(string);
 
             return typeof(char);
         }
+
+        protected dynamic convertStringToNumber(string inputValue)
+        {
+            return CellDataType switch
+            {
+                { } type when type == typeof(byte) => Convert.ToByte(inputValue),
+                { } type when type == typeof(float) => Convert.ToSingle(inputValue),
+                { } type when type == typeof(uint) => Convert.ToUInt32(inputValue),
+                { } type when type == typeof(short) => Convert.ToInt16(inputValue),
+                { } type when type == typeof(ushort) => Convert.ToUInt16(inputValue),
+                { } type when type == typeof(long) => Convert.ToInt64(inputValue),
+                { } type when type == typeof(ulong) => Convert.ToUInt64(inputValue),
+                { } type when type == typeof(sbyte) => Convert.ToSByte(inputValue),
+                { } type when type == typeof(int) => Convert.ToInt32(inputValue),
+                { } type when type == typeof(double) => Convert.ToDouble(inputValue),
+
+                _ => throw 
+                        new InvalidOperationException
+                        ($"Unsupported conversion type: {CellDataType}.")
+            };
+        }
+
+        protected Byte[] ConvertToByteArray(dynamic value, Type type)
+        {
+            return type switch
+            {
+                _ when type == typeof(byte) => new byte[] { (byte)value },
+                _ when type == typeof(uint) => BitConverter.GetBytes((uint)value),
+                _ when type == typeof(ushort) => BitConverter.GetBytes((ushort)value),
+                _ when type == typeof(ulong) => BitConverter.GetBytes((ulong)value),
+                _ when type == typeof(float) => BitConverter.GetBytes((float)value),
+                _ when type == typeof(SByte) => BitConverter.GetBytes((SByte)value),
+                _ when type == typeof(double) => BitConverter.GetBytes((double)value),
+                _ when type == typeof(bool) => BitConverter.GetBytes((bool)value),
+                _ when type == typeof(short) => BitConverter.GetBytes((short)value),
+                _ when type == typeof(int) => BitConverter.GetBytes((int)value),
+                _ when type == typeof(long) => BitConverter.GetBytes((long)value),
+                _ => throw new InvalidOperationException("Unsupported type")
+            };
+        }
+
+        ////////////////////////////////////////////////////////////////////////
+        /// Big Technical Debt here: Multiple bands. At this time (March 2024),
+        ///   I am putting a way to specifiy band in this part of the API, but
+        ///   not implementing it yet as this is specified out by client for now.
+        ///   If it comes back in later, it needs to be relocated to be in the
+        ///   GridInstance class, which is supposed to encapsulate everything
+        ///   related to interfacing with a linear array in a multi-dimensional
+        ///   way.
+        ////////////////////////////////////////////////////////////////////////
+
+        public void setValue(dynamic value, int column, int row,
+            int TileColumnIndex=-1, int TileRowIndex=-1, int band=0)
+        {
+            int arrayIndex = this.grid.AsArrayIndex(column, row);
+            Byte[] thisValueAsByteArray = ConvertToByteArray(value, this.CellDataType);
+            for(int i=0; i<this.ByteArrayLength; i++)
+                this.DataFrame[arrayIndex+i] = thisValueAsByteArray[i];
+        }
+
+        public Byte GetAsByte(int columnIndex, int rowIndex,
+            int TileColumnIndex = -1, int TileRowIndex = -1, int band = 0)
+        {
+            int arrayIndex = this.grid.AsArrayIndex(columnIndex, rowIndex);
+            Byte returnByte = this.DataFrame[arrayIndex];
+            return returnByte;
+        }
+
+        public SByte GetAsSByte(int columnIndex, int rowIndex,
+            int TileColumnIndex = -1, int TileRowIndex = -1, int band = 0)
+        {
+            int arrayIndex = this.grid.AsArrayIndex(columnIndex, rowIndex);
+            SByte returnSByte = (SByte) this.DataFrame[arrayIndex];
+            return returnSByte;
+        }
+
+        public short GetAsShort(int columnIndex, int rowIndex,
+            int TileColumnIndex = -1, int TileRowIndex = -1, int band = 0)
+        {
+            int arrayIndex = this.grid.AsArrayIndex(columnIndex, rowIndex);
+            int shortLength = sizeof(short);
+            arrayIndex *= shortLength;
+            return BitConverter.ToInt16(DataFrame, arrayIndex);
+        }
+
+        public ushort GetAsUShort(int columnIndex, int rowIndex,
+             int TileColumnIndex = -1, int TileRowIndex = -1, int band = 0)
+        {
+            int arrayIndex = this.grid.AsArrayIndex(columnIndex, rowIndex);
+            int ushortLength = sizeof(ushort);
+            arrayIndex *= ushortLength;
+            return BitConverter.ToUInt16(DataFrame, arrayIndex);
+        }
+
+        public int GetAsInt(int columnIndex, int rowIndex,
+             int TileColumnIndex = -1, int TileRowIndex = -1, int band = 0)
+        {
+            int arrayIndex = this.grid.AsArrayIndex(columnIndex, rowIndex);
+            int intLength = sizeof(int);
+            arrayIndex *= intLength;
+            return BitConverter.ToInt32(DataFrame, arrayIndex);
+        }
+
+        public uint GetAsUInt(int columnIndex, int rowIndex,
+             int TileColumnIndex = -1, int TileRowIndex = -1, int band = 0)
+        {
+            int arrayIndex = this.grid.AsArrayIndex(columnIndex, rowIndex);
+            int uintLength = sizeof(uint);
+            arrayIndex *= uintLength;
+            return BitConverter.ToUInt32(DataFrame, arrayIndex);
+        }
+
+        public long GetAsLong(int columnIndex, int rowIndex,
+             int TileColumnIndex = -1, int TileRowIndex = -1, int band = 0)
+        {
+            int arrayIndex = this.grid.AsArrayIndex(columnIndex, rowIndex);
+            int longLength = sizeof(long);
+            arrayIndex *= longLength;
+            return BitConverter.ToInt64(DataFrame, arrayIndex);
+        }
+
+        public ulong GetAsULong(int columnIndex, int rowIndex,
+             int TileColumnIndex = -1, int TileRowIndex = -1, int band = 0)
+        {
+            int arrayIndex = this.grid.AsArrayIndex(columnIndex, rowIndex);
+            int ulongLength = sizeof(ulong);
+            arrayIndex *= ulongLength;
+            return BitConverter.ToUInt64(DataFrame, arrayIndex);
+        }
+
+        public float GetAsFloat(int columnIndex, int rowIndex,
+             int TileColumnIndex = -1, int TileRowIndex = -1, int band = 0)
+        {
+            int arrayIndex = this.grid.AsArrayIndex(columnIndex, rowIndex);
+            int floatLength = sizeof(float);
+            arrayIndex *= floatLength;
+            return BitConverter.ToSingle(DataFrame, arrayIndex);
+        }
+
+        public double GetAsDouble(int columnIndex, int rowIndex,
+             int TileColumnIndex = -1, int TileRowIndex = -1, int band = 0)
+        {
+            int arrayIndex = this.grid.AsArrayIndex(columnIndex, rowIndex);
+            int doubleLength = sizeof(double);
+            arrayIndex *= doubleLength;
+            return BitConverter.ToDouble(DataFrame, arrayIndex);
+        }
+
+
+
+
 
         public void WriteASCRaster(string filePath)
         {
@@ -235,7 +395,11 @@ namespace GeoTBelt
                 writer.WriteLine("cellsize      " + cellSize);
                 writer.WriteLine("NODATA_value  " + NoDataValue);
 
-                writer.Write(this.bands[0].ToString());
+////////////////////////////////////////////
+                //writer.Write(this.bands[0].ToString());
+                
+                
+                
                 //for (int currentRow = 0; currentRow < numRows; currentRow++)
                 //{
                 //    for (int currentColumn = 0; currentColumn < numColumns; currentColumn++)
@@ -263,17 +427,19 @@ namespace GeoTBelt
 
         public void AddBand(IEnumerable<dynamic> datasetIn)
         {
-            dynamic[] dataset = datasetIn.ToArray();
-            Type bandType = dataset.GetType().GetElementType();
-            var newBand = new Band(this, dataset, bandType, this.numRows, this.numColumns);
-            this.bands.Add(newBand);
+/////////////////////////////////////////////////
+            //dynamic[] dataset = datasetIn.ToArray();
+            //Type bandType = dataset.GetType().GetElementType();
+            //var newBand = new Band(this, dataset, bandType, this.numRows, this.numColumns);
+            //this.bands.Add(newBand);
         }
 
         public void AddBand(Byte[] rawDataAsBytes, Type aType)
         {
-            Band newBand = 
-                new Band(this, rawDataAsBytes, aType, this.numRows, this.numColumns);
-            this.bands.Add((Band)newBand);
+////////////////////////////////////////////////////////
+            //Band newBand = 
+            //    new Band(this, rawDataAsBytes, aType, this.numRows, this.numColumns);
+            //this.bands.Add((Band)newBand);
         }
 
         private dynamic? imageGetField(Tiff img, TiffTag tag)

@@ -13,6 +13,7 @@ namespace Test_ToolBelt
     {
         private GridInstance gridInstance1 = default;
         private GridInstance gridInstance2 = default;
+        private GridInstance gridInstance3 = default;
 
         [TestInitialize]
         public void Setup()
@@ -29,6 +30,19 @@ namespace Test_ToolBelt
                 rasterRows: 10*4,
                 columnsPerTile: 10,
                 rowsPerTile: 10 );
+
+            gridInstance3 = new GridInstance(100, 200);
+        }
+
+        [TestMethod]
+        public void GridInstance_NoSubgrid_WorksRight()
+        {
+            Assert.IsNotNull(gridInstance3);
+
+            int expected = 102;
+            int actual = gridInstance3.AsArrayIndex(2, 1);
+            Assert.AreEqual(expected: expected, actual: actual);
+
         }
 
         [TestMethod]
