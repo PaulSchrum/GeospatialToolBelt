@@ -174,6 +174,7 @@ namespace GeoTBelt
                 anchorPoint = new GTBpoint(leftXCoordinate, topYCoordinate);
 
                 CellDataType = typeof(float);  // valid only for ASCII
+                SingleCellDataLength = sizeof(float);
                 NoDataValDynamic = convertStringToNumber(NoDataValue);
                 TotalCellCount = numColumns * numRows;
                 ByteArrayLength = 
@@ -288,7 +289,7 @@ namespace GeoTBelt
         {
             int arrayIndex = this.grid.AsArrayIndex(column, row);
             Byte[] thisValueAsByteArray = ConvertToByteArray(value, this.CellDataType);
-            for(int i=0; i<this.ByteArrayLength; i++)
+            for(int i=0; i<this.SingleCellDataLength; i++)
                 this.DataFrame[arrayIndex+i] = thisValueAsByteArray[i];
         }
 

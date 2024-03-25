@@ -59,14 +59,14 @@ namespace Test_ToolBelt
             initializeAscRaster();
             Assert.AreEqual(1, ascRaster.BandCount);
 
-            double expected = 4477.26d;
-            double actual = ascRaster.GetAsDouble(0, 0);
+            float expected = 4477.26f;
+            float actual = ascRaster.GetAsFloat(0, 0);
             Assert.IsNotNull(actual);
-            Assert.AreEqual(expected: expected, actual: (double) actual,
+            Assert.AreEqual(expected: expected, actual: (float) actual,
                 delta: 0.005);
 
-            expected = 4476.672d;
-            actual = ascRaster.GetAsDouble(1, 1);
+            expected = 4476.672f;
+            actual = ascRaster.GetAsFloat(1, 1);
             Assert.IsNotNull(actual);
             Assert.AreEqual(expected: expected, actual: (double)actual,
                 delta: 0.005);

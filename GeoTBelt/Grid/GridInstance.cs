@@ -25,6 +25,9 @@ namespace GeoTBelt.Grid
             int rasterColumns, int rasterRows, 
             int columnsPerTile=0, int rowsPerTile=0)
         {
+            if (columnsPerTile == 0) columnsPerTile = rasterColumns;
+            if (rowsPerTile == 0) rowsPerTile = rasterRows;
+
             this.rasterColumns = rasterColumns;
             this.rasterRows = rasterRows;
             this.columnsPerTile = columnsPerTile;
