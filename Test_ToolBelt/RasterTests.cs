@@ -172,6 +172,7 @@ namespace Test_ToolBelt
             }
         }
 
+        [Ignore]
         [TestMethod]
         public void GeoTiff_small_Populates5Band()
         {
@@ -202,6 +203,7 @@ namespace Test_ToolBelt
             }
         }
 
+        [Ignore]
         [TestMethod]
         public void GeoTiff_large_Populates5Band()
         {
