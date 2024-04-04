@@ -74,7 +74,6 @@ namespace Test_ToolBelt
 
         }
 
-        [Ignore]
         [TestMethod]
         public void ASC_WriteASCRaster_BlockWriteMethod_correctly()
         {

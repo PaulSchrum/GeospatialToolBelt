@@ -260,23 +260,23 @@ namespace GeoTBelt
                 writer.WriteLine("cellsize      " + cellSize);
                 writer.WriteLine("NODATA_value  " + NoDataValueString);
 
-                writer.Write(this.DataFrame.ToString());
-                //for (int currentRow = 0; currentRow < numRows; currentRow++)
-                //{
-                //    for (int currentColumn = 0; currentColumn < numColumns; currentColumn++)
-                //    {
-                //        if (this.bands[0].cellArray[currentRow, currentColumn] == double.NaN)
-                //        {
-                //            writer.Write(NoDataValue + " ");
-                //        }
-                //        else
-                //        {
-                //            string outValue = $"{cellArray[currentRow, currentColumn]:0.###} ";
-                //            writer.Write(outValue);
-                //        }
-                //    }
-                //    writer.WriteLine("");
-                //}
+                for (int currentRow = 0; currentRow < numRows; currentRow++)
+                {
+                    for (int currentColumn = 0; currentColumn < numColumns; currentColumn++)
+                    {
+                        T value = this.GetValueAt(currentRow, currentColumn);
+                        if (EqualityComparer<T>.Default.Equals(value, NoDataValue))
+                        {
+                            writer.Write(NoDataValue + " ");
+                        }
+                        else
+                        {
+                            string outValue = $"{value:0.###} ";
+                            writer.Write(outValue);
+                        }
+                    }
+                    writer.WriteLine("");
+                }
                 writer.Flush();
             }
         }
