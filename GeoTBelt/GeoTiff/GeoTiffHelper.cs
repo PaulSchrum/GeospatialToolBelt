@@ -72,9 +72,10 @@ namespace GeoTBelt.GeoTiff
         //TiffTag.GEOTIFFPHOTOMETRICINTERPRETATIONTAG;   // 33922
         //TiffTag.GEOTIFFGEOGRAPHICTYPEGEOKEY;  // 34737
 
-        public static GeoTiffRaster ReadGeoTiff(string fileToOpen)
+        public static GeoTiffRaster<T> ReadGeoTiff<T>(string fileToOpen)
+            where T : struct
         {
-            GeoTiffRaster returnRaster = null;
+            GeoTiffRaster<T> returnRaster = null;
 
             using (Tiff tifData = Tiff.Open(fileToOpen, "r"))
             {
@@ -82,7 +83,7 @@ namespace GeoTBelt.GeoTiff
 
                 var tags = GetAllTags(tifData);
 
-                returnRaster = new GeoTiffRaster();
+                returnRaster = new GeoTiffRaster<T>();
 
                 #region raster base class items
                 int width = tags["ImageWidth"];
@@ -101,7 +102,7 @@ namespace GeoTBelt.GeoTiff
                 {
                     NoDataString = tags["GDAL_NODATA"];
                     if (NoDataString is not null)
-                        returnRaster.NoDataValue = NoDataString.Trim();
+                        returnRaster.NoDataValueString = NoDataString.Trim();
                 }
 
                 var t = tags["ModelPixelScaleTag"];
@@ -308,19 +309,19 @@ namespace GeoTBelt.GeoTiff
             }
             if(bitsPerSample == 16)
             {
-                if (sampleFormat == (short)GeoTiffRaster.BPS_UnsignedInteger)
+                if (sampleFormat == GeoTiffRaster<ushort>.BPS_UnsignedInteger)
                     return Type.GetType("System.UInt16"); // CellDataTypeEnum.UInt16;
-                if (sampleFormat == (short)GeoTiffRaster.BPS_SignedInteger)
+                if (sampleFormat == GeoTiffRaster<short>.BPS_SignedInteger)
                     return Type.GetType("System.UInt16"); //CellDataTypeEnum.Int16;
                 return null; // CellDataTypeEnum.Unknown;
             }
             if(bitsPerSample == 32)
             {
-                if(sampleFormat == (short)GeoTiffRaster.BPS_UnsignedInteger)
+                if(sampleFormat == GeoTiffRaster<uint>.BPS_UnsignedInteger)
                     return Type.GetType("System.UInt32"); // CellDataTypeEnum.UInt32;
-                if(sampleFormat == (short)GeoTiffRaster.BPS_SignedInteger)
+                if(sampleFormat == GeoTiffRaster<int>.BPS_SignedInteger)
                     return Type.GetType("System.Int32"); // CellDataTypeEnum.Int32;
-                if (sampleFormat == (short)GeoTiffRaster.BPS_IEEEFP)
+                if (sampleFormat == GeoTiffRaster<float>.BPS_IEEEFP)
                     return Type.GetType("System.Single"); //CellDataTypeEnum.Float;
                 return null; // CellDataTypeEnum.Unknown;
             }
@@ -332,187 +333,188 @@ namespace GeoTBelt.GeoTiff
             return null; // CellDataTypeEnum.Unknown;
         }
 
-        protected static void tryReadingAsTiles(Tiff tifData, GeoTiffRaster rstr)
-        {
-            int bytesPerValue = (int)rstr.BitsPerSample / 8;
-            int bandCount = (int)rstr.SamplesPerPixel;
+        ///// Uncomment this when doing GeoTiffs
+        //protected static void tryReadingAsTiles(Tiff tifData, GeoTiffRaster<T> rstr)
+        //{
+        //    int bytesPerValue = (int)rstr.BitsPerSample / 8;
+        //    int bandCount = (int)rstr.SamplesPerPixel;
 
-            int rasterColumns = rstr.numColumns; // Pixel columns in the raster
-            int rasterRows = rstr.numRows;     // Pixel rows in the raster
+        //    int rasterColumns = rstr.numColumns; // Pixel columns in the raster
+        //    int rasterRows = rstr.numRows;     // Pixel rows in the raster
 
-            int columnsPerTile = (int)rstr.TileWidth; // Pixel columns in a tile
-            int rowsPerTile = (int)rstr.TileLength; // Pixel rows in a tile
+        //    int columnsPerTile = (int)rstr.TileWidth; // Pixel columns in a tile
+        //    int rowsPerTile = (int)rstr.TileLength; // Pixel rows in a tile
 
-            int tileColumnCount = 1 + (int) (rasterColumns / columnsPerTile); // Columns of tiles in a raster
-            int tileRowCount = 1 + (int) (rasterRows / rowsPerTile);  // Rows of tiles in a raster
+        //    int tileColumnCount = 1 + (int) (rasterColumns / columnsPerTile); // Columns of tiles in a raster
+        //    int tileRowCount = 1 + (int) (rasterRows / rowsPerTile);  // Rows of tiles in a raster
 
-            int lastTilePixelColumns = rasterColumns % columnsPerTile; 
-            int lastTilePixelRows = rasterRows % rowsPerTile;
+        //    int lastTilePixelColumns = rasterColumns % columnsPerTile; 
+        //    int lastTilePixelRows = rasterRows % rowsPerTile;
 
-            int lastTileColumnOverhang = columnsPerTile - lastTilePixelColumns;
-            int lastTileBandColumnsOverhang = lastTileColumnOverhang * bandCount;
-            int lastTileRowOverhang = rowsPerTile - lastTilePixelRows;
-            int pixelCount = rasterRows * rasterColumns;
-            int byteCount = pixelCount * bytesPerValue;
-            for (int bandId = 0; bandId < bandCount; bandId++)
-            {
-                Byte[] byteBlock = new Byte[byteCount];
-                rstr.AddBand(byteBlock, rstr.CellDataType);
-            }
+        //    int lastTileColumnOverhang = columnsPerTile - lastTilePixelColumns;
+        //    int lastTileBandColumnsOverhang = lastTileColumnOverhang * bandCount;
+        //    int lastTileRowOverhang = rowsPerTile - lastTilePixelRows;
+        //    int pixelCount = rasterRows * rasterColumns;
+        //    int byteCount = pixelCount * bytesPerValue;
+        //    //for (int bandId = 0; bandId < bandCount; bandId++)
+        //    //{
+        //    //    Byte[] byteBlock = new Byte[byteCount];
+        //    //    rstr.AddBand(byteBlock, rstr.CellDataType);
+        //    //}
 
-            GridInstance grd =
-                new GridInstance(rasterColumns: rasterColumns,
-                rasterRows: rasterRows, columnsPerTile: columnsPerTile,
-                rowsPerTile: rowsPerTile);
+        //    GridInstance grd =
+        //        new GridInstance(rasterColumns: rasterColumns,
+        //        rasterRows: rasterRows, columnsPerTile: columnsPerTile,
+        //        rowsPerTile: rowsPerTile);
 
-            //tifData.ReadTile(new byte[4], 0, 0, 0, 0, 0);
-            byte[] buffer = new byte[columnsPerTile * rowsPerTile * bandCount];
-            int bufferLength = buffer.Length;
+        //    //tifData.ReadTile(new byte[4], 0, 0, 0, 0, 0);
+        //    byte[] buffer = new byte[columnsPerTile * rowsPerTile * bandCount];
+        //    int bufferLength = buffer.Length;
 
-            int destinationIndex = 0;
-            int subPixelCounter = 0;
-            int subPixelStepSize = (int) rstr.BitsPerSample / 8;
-            byte[] buf = new byte[columnsPerTile * rowsPerTile * bandCount];
-            int tileCounter = -1;
-            for (int tileRow = 0; tileRow < tileRowCount; tileRow++)
-            {
-                for (int tileColumn = 0; tileColumn < tileColumnCount; tileColumn++)
-                {
-                    tileCounter++;
-                    tifData.ReadTile(buf, 0, tileColumn, tileRow, 0, 0);
-                    for(int bdx=0; bdx < bandCount; bdx++)
-                    { // Note: This code builds but does not work. 
-                        //var byteArrayDestination =
-                        //    (rstr.bands[bdx].CellArray) as byte[];
-                        //Buffer.BlockCopy(buf, subPixelCounter,
-                        //    byteArrayDestination, destinationIndex, subPixelCounter);
-                    }
-                }
-            }
+        //    int destinationIndex = 0;
+        //    int subPixelCounter = 0;
+        //    int subPixelStepSize = (int) rstr.BitsPerSample / 8;
+        //    byte[] buf = new byte[columnsPerTile * rowsPerTile * bandCount];
+        //    int tileCounter = -1;
+        //    for (int tileRow = 0; tileRow < tileRowCount; tileRow++)
+        //    {
+        //        for (int tileColumn = 0; tileColumn < tileColumnCount; tileColumn++)
+        //        {
+        //            tileCounter++;
+        //            tifData.ReadTile(buf, 0, tileColumn, tileRow, 0, 0);
+        //            for(int bdx=0; bdx < bandCount; bdx++)
+        //            { // Note: This code builds but does not work. 
+        //                //var byteArrayDestination =
+        //                //    (rstr.bands[bdx].CellArray) as byte[];
+        //                //Buffer.BlockCopy(buf, subPixelCounter,
+        //                //    byteArrayDestination, destinationIndex, subPixelCounter);
+        //            }
+        //        }
+        //    }
 
-            ////
-            //for(int tileColumn=0; tileColumn < tileColumnCount; tileColumn++)
-            //{
-            //    for(int tileRow=0; tileRow < tileRowCount; tileRow++)
-            //    {
-            //        for(int subCol=0; subCol< columnsPerTile; subCol++)
-            //        {
-            //            for(int subRow=0; subRow < rowsPerTile; subRow++)
-            //            {
-            //                byte[] buf = new byte[4];
-            //                tifData.ReadTile(buf, 0, rasterColumn, rasterRow, 0, 0);
-            //                int i = 0;
-            //            }
-            //        }
-            //    }
-            //}
+        //    ////
+        //    //for(int tileColumn=0; tileColumn < tileColumnCount; tileColumn++)
+        //    //{
+        //    //    for(int tileRow=0; tileRow < tileRowCount; tileRow++)
+        //    //    {
+        //    //        for(int subCol=0; subCol< columnsPerTile; subCol++)
+        //    //        {
+        //    //            for(int subRow=0; subRow < rowsPerTile; subRow++)
+        //    //            {
+        //    //                byte[] buf = new byte[4];
+        //    //                tifData.ReadTile(buf, 0, rasterColumn, rasterRow, 0, 0);
+        //    //                int i = 0;
+        //    //            }
+        //    //        }
+        //    //    }
+        //    //}
 
-            ////
+        //    ////
 
-            //int rasterColumn = tileColumn * columnsPerTile + subCol;
-            //int rasterRow = tileRow * rowsPerTile + subRow;
-            //int rasterIndex = rasterRow * rasterColumns + rasterColumn;
-            //int tileIndex = subRow * columnsPerTile + subCol;
-            //int tileOffset = tileIndex * bandCount;
-            //int tileByteOffset = tileOffset * 4;
-            //int rasterByteOffset = rasterIndex * 4;
+        //    //int rasterColumn = tileColumn * columnsPerTile + subCol;
+        //    //int rasterRow = tileRow * rowsPerTile + subRow;
+        //    //int rasterIndex = rasterRow * rasterColumns + rasterColumn;
+        //    //int tileIndex = subRow * columnsPerTile + subCol;
+        //    //int tileOffset = tileIndex * bandCount;
+        //    //int tileByteOffset = tileOffset * 4;
+        //    //int rasterByteOffset = rasterIndex * 4;
 
 
-            // Starting here
-            // Rework logic to use the new Tiled coordinate system framework I developed.
-            List<byte[]> byteBlocks = new List<byte[]>();
+        //    // Starting here
+        //    // Rework logic to use the new Tiled coordinate system framework I developed.
+        //    List<byte[]> byteBlocks = new List<byte[]>();
 
-            for (int y = 0; y < rstr.numRows; y+=(int)rstr.TileLength)
-            {
-                for(int x = 0; x < rstr.numColumns; x += (int)rstr.TileWidth)
-                {
-                    buf = new byte[(int)rstr.TileSize];
-                    tifData.ReadTile(buf, 0, x, y, 0, 0);
-                    byteBlocks.Add(buf);
-                }
-            }
-            var tileSize = rstr.TileSize;
-            var tileWidth = rstr.TileWidth;
-            var columnCnt = rstr.numColumns;
-            var flattenedArray = byteBlocks.SelectMany(tile => tile).ToArray();
-            int flattenedArrayLength = flattenedArray.Length;
+        //    for (int y = 0; y < rstr.numRows; y+=(int)rstr.TileLength)
+        //    {
+        //        for(int x = 0; x < rstr.numColumns; x += (int)rstr.TileWidth)
+        //        {
+        //            buf = new byte[(int)rstr.TileSize];
+        //            tifData.ReadTile(buf, 0, x, y, 0, 0);
+        //            byteBlocks.Add(buf);
+        //        }
+        //    }
+        //    var tileSize = rstr.TileSize;
+        //    var tileWidth = rstr.TileWidth;
+        //    var columnCnt = rstr.numColumns;
+        //    var flattenedArray = byteBlocks.SelectMany(tile => tile).ToArray();
+        //    int flattenedArrayLength = flattenedArray.Length;
 
-            int cellCount = rstr.numRows * rstr.numColumns;
-            int cellSizeInBytes = (int) rstr.BitsPerSample / 8;
-            int numBands = (int) rstr.SamplesPerPixel;
-            int cellBlockSize = cellSizeInBytes * numBands;
-            int numCells = cellCount * cellSizeInBytes;
-            numCells = rstr.numRows * rstr.numColumns;
-            List<dynamic[]> bandArrays = new List<dynamic[]>();
-            for(int idx = 0; idx < numBands; idx++)
-            {
-                bandArrays.Add(new dynamic[numCells]);
-            }
+        //    int cellCount = rstr.numRows * rstr.numColumns;
+        //    int cellSizeInBytes = (int) rstr.BitsPerSample / 8;
+        //    int numBands = (int) rstr.SamplesPerPixel;
+        //    int cellBlockSize = cellSizeInBytes * numBands;
+        //    int numCells = cellCount * cellSizeInBytes;
+        //    numCells = rstr.numRows * rstr.numColumns;
+        //    List<dynamic[]> bandArrays = new List<dynamic[]>();
+        //    for(int idx = 0; idx < numBands; idx++)
+        //    {
+        //        bandArrays.Add(new dynamic[numCells]);
+        //    }
 
-            //int rasterSizeInBytes = cellCount * numBands;
-            //int stepSize = cellSizeInBytes;
-            //for(int row = 0; row < rstr.numRows; row++)
-            //{
-            //    int rowStart = row * rstr.numColumns;
-            //    for(int col = 0; col < rstr.numColumns; col++)
-            //    {
-            //        int linearIndex = rowStart + col;
-            //        int flattenedIndex = linearIndex * cellBlockSize;
-            //        for(int bandIdx = 0; bandIdx < numBands; bandIdx++)
-            //        {
-            //            dynamic[] aBandArray = bandArrays[bandIdx];
-            //            aBandArray[linearIndex] = flattenedArray[flattenedIndex + bandIdx];
-            //        }
-            //    }
-            //}
-            //int stopHere = 1;
+        //    //int rasterSizeInBytes = cellCount * numBands;
+        //    //int stepSize = cellSizeInBytes;
+        //    //for(int row = 0; row < rstr.numRows; row++)
+        //    //{
+        //    //    int rowStart = row * rstr.numColumns;
+        //    //    for(int col = 0; col < rstr.numColumns; col++)
+        //    //    {
+        //    //        int linearIndex = rowStart + col;
+        //    //        int flattenedIndex = linearIndex * cellBlockSize;
+        //    //        for(int bandIdx = 0; bandIdx < numBands; bandIdx++)
+        //    //        {
+        //    //            dynamic[] aBandArray = bandArrays[bandIdx];
+        //    //            aBandArray[linearIndex] = flattenedArray[flattenedIndex + bandIdx];
+        //    //        }
+        //    //    }
+        //    //}
+        //    //int stopHere = 1;
 
-            #region ForDevDiagnostics
-            // Not needed to run in production; only when figuring out how
-            // to understand this data structure.
-            //
-            List<Range> zerosRanges = new List<Range>();
-            int aStart = 0; int anEnd = 0;
-            for (int idx = 0; idx < flattenedArray.Length; idx++)
-            {
-                if (flattenedArray[idx] == 0)
-                {
-                    anEnd = idx;
-                }
-                else
-                {
-                    if (anEnd == idx - 1)
-                    {
-                        zerosRanges.Add(new Range(aStart, anEnd));
-                    }
-                    aStart = idx;
-                }
-            }
+        //    #region ForDevDiagnostics
+        //    // Not needed to run in production; only when figuring out how
+        //    // to understand this data structure.
+        //    //
+        //    List<Range> zerosRanges = new List<Range>();
+        //    int aStart = 0; int anEnd = 0;
+        //    for (int idx = 0; idx < flattenedArray.Length; idx++)
+        //    {
+        //        if (flattenedArray[idx] == 0)
+        //        {
+        //            anEnd = idx;
+        //        }
+        //        else
+        //        {
+        //            if (anEnd == idx - 1)
+        //            {
+        //                zerosRanges.Add(new Range(aStart, anEnd));
+        //            }
+        //            aStart = idx;
+        //        }
+        //    }
 
-            Range r1 = zerosRanges[1];
-            var v = r1.End.Value - r1.Start.Value;
-            var v2 = zerosRanges[14].End.Value - zerosRanges[14].Start.Value;
+        //    Range r1 = zerosRanges[1];
+        //    var v = r1.End.Value - r1.Start.Value;
+        //    var v2 = zerosRanges[14].End.Value - zerosRanges[14].Start.Value;
 
-            int before = zerosRanges.Count;
+        //    int before = zerosRanges.Count;
 
-            zerosRanges = zerosRanges
-                .Where(r => (r.End.Value - r.Start.Value) > 1)
-                .ToList();
-            int after = zerosRanges.Count;
-            var zeroRangeSizes = zerosRanges
-                .Select(r => r.End.Value - r.Start.Value).ToList();
+        //    zerosRanges = zerosRanges
+        //        .Where(r => (r.End.Value - r.Start.Value) > 1)
+        //        .ToList();
+        //    int after = zerosRanges.Count;
+        //    var zeroRangeSizes = zerosRanges
+        //        .Select(r => r.End.Value - r.Start.Value).ToList();
 
-            bool allAre210 = zeroRangeSizes.All(s => s == 210);
-            List<int> not210 = zeroRangeSizes.Where(s => s != 210).ToList();
-            bool allTheseAreSame = not210.All(s => s == not210[0]);
-            int countOf210Span = zeroRangeSizes.Count(s => s == 210);
-            int countOf81280 = zeroRangeSizes.Count(s => s == 81280);
-            int sumCount = countOf210Span + countOf81280;
-            #endregion ForDevDiagnostics
+        //    bool allAre210 = zeroRangeSizes.All(s => s == 210);
+        //    List<int> not210 = zeroRangeSizes.Where(s => s != 210).ToList();
+        //    bool allTheseAreSame = not210.All(s => s == not210[0]);
+        //    int countOf210Span = zeroRangeSizes.Count(s => s == 210);
+        //    int countOf81280 = zeroRangeSizes.Count(s => s == 81280);
+        //    int sumCount = countOf210Span + countOf81280;
+        //    #endregion ForDevDiagnostics
 
-            int i = 09;
-            throw new NotImplementedException();
-        }
+        //    int i = 09;
+        //    throw new NotImplementedException();
+        //}
 
         private dynamic? imageGetField(Tiff img, TiffTag tag)
         {

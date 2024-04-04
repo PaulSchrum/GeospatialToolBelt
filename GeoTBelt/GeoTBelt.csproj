@@ -7,6 +7,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="GeoTiff\**" />
+    <EmbeddedResource Remove="GeoTiff\**" />
+    <None Remove="GeoTiff\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="BitMiracle.LibTiff.NET" Version="2.4.649" />
   </ItemGroup>
 

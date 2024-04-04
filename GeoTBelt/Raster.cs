@@ -1,11 +1,14 @@
 ﻿using BitMiracle.LibTiff.Classic;
-using GeoTBelt.GeoTiff;
+//using GeoTBelt.GeoTiff;
+using GeoTBelt.Grid;
 using System.Collections;
+using System.ComponentModel.DataAnnotations.Schema;
+using System.Globalization;
 //using static System.Net.Mime.MediaTypeNames;
 
 namespace GeoTBelt
 {
-    public class Raster
+    public class Raster<T> where T : struct
     {
         public double cellSize
         {
@@ -15,7 +18,7 @@ namespace GeoTBelt
                 {
                     _cellSizeX = _cellSizeY = 1.0;
                 }
-                return (double) _cellSizeX;
+                return (double)_cellSizeX;
             }
             internal set
             {
@@ -37,14 +40,14 @@ namespace GeoTBelt
                 _cellSizeX = value;
             }
         }
-        
+
         private double? _cellSizeY = null;
-        public double cellSizeY 
+        public double cellSizeY
         {
             get
             {
                 if (_cellSizeY is null) { return cellSize; }
-                return (double) _cellSizeY;
+                return (double)_cellSizeY;
             }
             internal set
             {
@@ -59,9 +62,24 @@ namespace GeoTBelt
         public double bottomYCoordinate { get; internal set; }
         public double topYCoordinate { get; internal set; }
         public GTBpoint anchorPoint { get; internal set; } // upper left point of the raster
-        public string NoDataValue { get; internal set; }
+
+        private string noDataValueString_;
+        public string NoDataValueString 
+        { 
+            get { return noDataValueString_; }
+            internal set
+            {
+                noDataValueString_ = value;
+                NoDataValue = ParseStringToNumber(NoDataValueString);
+            }
+        }
+        public T NoDataValue { get; protected set; }
         internal Type CellDataType { get; set; } = null;
-        public List<Band> bands { get; internal set; } = new List<Band>();
+        public int CellCount { get; protected set; }
+        public int BandCount { get; protected set; }
+        public GridInstance Grid { get; protected set; }
+        public List<T> DataFrame { get; private set; }
+        //public List<Band> bands { get; internal set; } = new List<Band>();
 
 
         internal Raster() { }
@@ -73,7 +91,7 @@ namespace GeoTBelt
         /// <param name="format"></param>
         /// <returns></returns>
         /// <exception cref="ArgumentException"></exception>
-        public static Raster Load(string fullPath, string format = "")
+        public static Raster<T> Load(string fullPath, string format = "")
         {
             string fileType = format;
             if (string.IsNullOrEmpty(fileType))
@@ -82,7 +100,7 @@ namespace GeoTBelt
                 throw new ArgumentException
                     ("Could not determine file type from path or format parameter.");
 
-            Raster returnRaster = new Raster();
+            Raster<T> returnRaster = new Raster<T>();
 
             fileType = fileType.ToLower();
             if (fileType[0] == '.')
@@ -94,8 +112,9 @@ namespace GeoTBelt
             }
             else if (considerGeoTiff(fileType))
             {
-                returnRaster = GeoTiffHelper.ReadGeoTiff(fullPath);
-                    //.populateRasterFromTiffFile(fullPath);
+                throw new NotImplementedException("GeoTiff");
+                //returnRaster = GeoTiffHelper.ReadGeoTiff(fullPath);
+                //.populateRasterFromTiffFile(fullPath);
             }
             else
             {
@@ -106,12 +125,22 @@ namespace GeoTBelt
             return returnRaster;
         }
 
+        public T GetValueAt(int row, int column, int band=0) 
+        { 
+            int linearIndex = this.Grid.AsArrayIndex(row, column);
+            return DataFrame[linearIndex];
+        }
+
+        public void SetValueAt(T value, 
+            int row, int column, int band=0)
+        {
+            int linearIndex = this.Grid.AsArrayIndex(row, column);
+            DataFrame[linearIndex] = value;
+        }
+
         #region Asc Raster Format
         private void populateRasterFromAscFile(string path)
         {
-            this.bands.Add(new Band(this));
-            var band = this.bands[0];
-
             using (StreamReader sr = new StreamReader(path))
             {
                 int rowCount = 0;
@@ -152,7 +181,8 @@ namespace GeoTBelt
                             }
                         case "NODATA_value":
                             {
-                                NoDataValue = lineArray[1];
+                                NoDataValueString = lineArray[1];
+                                NoDataValue = ParseStringToNumber(NoDataValueString);
                                 rowCount++;
                                 break;
                             }
@@ -163,11 +193,15 @@ namespace GeoTBelt
 
                 topYCoordinate = bottomYCoordinate + cellSize * numRows;
                 anchorPoint = new GTBpoint(leftXCoordinate, topYCoordinate);
-                band.theType = typeof(double);
+
+                Grid = new GridInstance(numColumns, numRows);
+
+                BandCount = 1;
+                CellCount = numColumns * numRows * BandCount;
+                T[] tempStorage = new T[CellCount];
 
                 string line;
                 int rowCounter = -1;
-                bool arrayCreated = false;
                 while (true)
                 {
                     line = sr.ReadLine();
@@ -179,27 +213,18 @@ namespace GeoTBelt
                     foreach (var entry in lineList)
                     {
                         columnCounter++;
-                        if (entry == this.NoDataValue)
-                            band.Set(double.NaN, rowCounter, columnCounter);
-                        else
-                        {
-                            if(!arrayCreated)
-                            {
-                                band.CreateCellArray(numColumns, numRows);
-                                band.theType = numberParser(entry);
-                                arrayCreated = true;
-                            }
-                            if (band.theType == typeof(double))
-                                band.Set(double.Parse(entry), rowCounter, columnCounter);
-                            else if (band.theType == typeof(int))
-                                band.Set(int.Parse(entry), rowCounter, columnCounter);
-                            else // it's string or char. Can't handle complex.
-                                band.Set(entry, rowCounter, columnCounter);
-                        }
+                        tempStorage[Grid.AsArrayIndex(columnCounter, rowCounter)] =
+                            ParseStringToNumber(entry);
                     }
                 }
-
+                this.DataFrame = tempStorage.ToList();
             }
+        }
+
+        private T ParseStringToNumber(string strVal)
+        {
+            return 
+                (T)Convert.ChangeType(strVal, typeof(T), CultureInfo.InvariantCulture);
         }
 
         private Type numberParser(string inputValue)
@@ -233,9 +258,9 @@ namespace GeoTBelt
                 writer.WriteLine("xllcorner     " + leftXCoordinate);
                 writer.WriteLine("yllcorner     " + bottomYCoordinate);
                 writer.WriteLine("cellsize      " + cellSize);
-                writer.WriteLine("NODATA_value  " + NoDataValue);
+                writer.WriteLine("NODATA_value  " + NoDataValueString);
 
-                writer.Write(this.bands[0].ToString());
+                writer.Write(this.DataFrame.ToString());
                 //for (int currentRow = 0; currentRow < numRows; currentRow++)
                 //{
                 //    for (int currentColumn = 0; currentColumn < numColumns; currentColumn++)
@@ -261,20 +286,20 @@ namespace GeoTBelt
         //public Raster populateRasterFromTiffFile(string fileToOpen)
         //{ }
 
-        public void AddBand(IEnumerable<dynamic> datasetIn)
-        {
-            dynamic[] dataset = datasetIn.ToArray();
-            Type bandType = dataset.GetType().GetElementType();
-            var newBand = new Band(this, dataset, bandType, this.numRows, this.numColumns);
-            this.bands.Add(newBand);
-        }
+        //public void AddBand(IEnumerable<dynamic> datasetIn)
+        //{
+        //    dynamic[] dataset = datasetIn.ToArray();
+        //    Type bandType = dataset.GetType().GetElementType();
+        //    var newBand = new Band<T>(this, dataset, bandType, this.numRows, this.numColumns);
+        //    this.bands.Add(newBand);
+        //}
 
-        public void AddBand(Byte[] rawDataAsBytes, Type aType)
-        {
-            Band newBand = 
-                new Band(this, rawDataAsBytes, aType, this.numRows, this.numColumns);
-            this.bands.Add((Band)newBand);
-        }
+        //public void AddBand(Byte[] rawDataAsBytes, Type aType)
+        //{
+        //    Band<T> newBand = 
+        //        new Band<T>(this, rawDataAsBytes, aType, this.numRows, this.numColumns);
+        //    this.bands.Add((Band<T>)newBand);
+        //}
 
         private dynamic? imageGetField(Tiff img, TiffTag tag)
         {

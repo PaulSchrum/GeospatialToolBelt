@@ -9,22 +9,23 @@ using System.Threading.Tasks;
 
 namespace GeoTBelt
 {
-    public class Band
+    [Obsolete]
+    public class Band<T> where T : struct
     {
         public dynamic[] CellArray { get; protected set; }
-        public Raster MyParent { get; protected set; }
+        public Raster<T> MyParent { get; protected set; }
         public Type theType { get; set; } = typeof(double);
 
         private Band() { }
 
-        public Band(Raster parent)
+        public Band(Raster<T> parent)
         { 
             MyParent = parent;
             theType = null;
             CellArray = null;
         }
 
-        public Band(Raster parent, dynamic[] dataFrame, Type type,
+        public Band(Raster<T> parent, dynamic[] dataFrame, Type type,
             int numRows, int numCols)
             : this(parent)
         {
@@ -32,7 +33,7 @@ namespace GeoTBelt
             theType = type;
         }
 
-        public Band (Raster parent, Byte[] dataFrameAsBytes, Type aType,
+        public Band (Raster<T> parent, Byte[] dataFrameAsBytes, Type aType,
                        int numRows, int numCols)
             : this(parent)
         {
@@ -194,7 +195,7 @@ namespace GeoTBelt
         public override string ToString()
         {
             StringBuilder output = new StringBuilder();
-            var NoDataValue = MyParent.NoDataValue;
+            var NoDataValue = MyParent.NoDataValueString;
             for (int currentRow = 0; currentRow < MyParent.numRows; currentRow++)
             {
                 for (int currentColumn = 0; currentColumn < MyParent.numColumns; currentColumn++)

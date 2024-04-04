@@ -4,10 +4,11 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using BitMiracle.LibTiff.Classic;
+using GeoTBelt;
 
 namespace GeoTBelt.GeoTiff
 {
-    public class GeoTiffRaster : Raster
+    public class GeoTiffRaster<T> : Raster<T> where T : struct
     {
         public int? Compression { get; set; }
         public int? BitsPerSample { get; set; }
