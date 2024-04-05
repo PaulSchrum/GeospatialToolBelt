@@ -1,5 +1,5 @@
 using GeoTBelt;
-//using GeoTBelt.GeoTiff;
+using GeoTBelt.GeoTiff;
 using System.Linq;
 
 namespace Test_ToolBelt
@@ -15,7 +15,7 @@ namespace Test_ToolBelt
         private static string ascOutputTestFile;
         private static string ascOutputTestFileFullPath;
 
-        //private static GeoTiffRaster<float> geoTiffRaster_singleBand;
+        private static GeoTiffRaster<float> geoTiffRaster_singleBand;
         private static string geoTiffFileName_singleBand;
         private static string geoTiffFileFullPath_singleBand;
 
@@ -93,16 +93,16 @@ namespace Test_ToolBelt
         }
         #endregion ASC format tests
 
-        //private static void initializeSingleBandTiff()
-        //{
-        //    if (geoTiffRaster_singleBand is null)
-        //    {
-        //        // geoTiffFileName = "NCSU Biltmore Hall small uncomp.tif";
-        //        geoTiffFileName_singleBand = "TestData_00765413_uncompressed.tif";
-        //        geoTiffFileFullPath_singleBand = Path.Combine(currentDirectory, geoTiffFileName_singleBand);
-        //        geoTiffRaster_singleBand = (GeoTiffRaster)Raster.Load(geoTiffFileFullPath_singleBand);
-        //    }
-        //}
+        private static void initializeSingleBandTiff()
+        {
+            if (geotiffraster_singleband is null)
+            {
+                // geoTiffFileName = "NCSU Biltmore Hall small uncomp.tif";
+                geoTiffFileName_singleBand = "TestData_00765413_uncompressed.tif";
+                geoTiffFileFullPath_singleBand = Path.Combine(currentDirectory, geoTiffFileName_singleBand);
+                geoTiffRaster_singleBand = (GeoTiffRaster)Raster.Load(geoTiffFileFullPath_singleBand);
+            }
+        }
 
         [Ignore]
         [TestMethod]
