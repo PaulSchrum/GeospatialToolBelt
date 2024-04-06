@@ -212,58 +212,31 @@ namespace GeoTBelt.GeoTiff
                     byte[] cellBuffer = new byte[bytesPerValue];
                     if ((int) PlanarConfig.CONTIG == (int) returnRaster.PlanarConfiguration)
                     {   // CONTIG is chunky -- all bands in one strip
+                        int dataFramePositionIdx = 0;
                         for (int row = 0; row < returnRaster.numRows; row++)
                         {   // Parse and rearrange bytes into each byteList
                             tifData.ReadScanline(buf, row);
 
-                            for(int position = 0; position < bytesToRead; position+=bytesPerValue)
+                            for(int position = dataFramePositionIdx; 
+                                (position - dataFramePositionIdx) < bytesToRead; 
+                                position+=bytesPerValue)
                             {
-                                T receiver = ConvertFromByteArrayTo<T>(buf, position);
+                                T receiver = ConvertFromByteArrayTo<T>(buf, position-dataFramePositionIdx);
                                 returnRaster.DataFrame[position/bytesPerValue] = receiver;
                             }
-
+                            dataFramePositionIdx += bytesToRead;
                         }
 
-                        // start here.
-                        // We have successfully read one scanline, but that's all.
-                        // Now we have to read each scanline and start the DataFrame index
-                        // interior to the array so as not to overwrite the previous scanlines.
+                        bool ScanLineApproachSucceeded = true;
+                        // Technical Debt: find a good way to verify that the read operation succeeded.
+                        // This test will set ScanLineApproachSucceeded to false. But for now it's true.
 
-                        string debugTemp = "88";
-                        bool ScanLineApproachSucceeded = false;
-                        foreach(List<Byte> aByteList in byteLists)
-                        {
-                            bool isAllZeroes = aByteList.All(val => val == 0);
-                            if(!isAllZeroes)
-                            {
-                                ScanLineApproachSucceeded = true;
-                                break;
-                            }
-                        }
                         if(!ScanLineApproachSucceeded)
                         {
                             //tryReadingAsTiles(tifData, returnRaster);
                             throw new Exception("ScanLineApproachSucceeded failed. Not able to read as tiles.");
                             // return tryReadAsBlocks();
                         }
-                        //////foreach (List<Byte> aByteList in byteLists)
-                        //////{
-                        //////    returnRaster.AddBand(aByteList.ToArray(),
-                        //////            returnRaster.CellDataType);
-                        //////}
-                        string dbg = "debugging";
-                        //int bytesPerItem = 32 / 8;
-                        //List<float> floatList = new List<float>();
-                        //for(int byteIdx=0; byteIdx < byteList.Count; byteIdx+=bytesPerItem)
-                        //{
-                        //    // Extract four bytes starting from byteIdx
-                        //    byte[] bytes = byteList.Skip(byteIdx).Take(bytesPerItem).ToArray();
-
-                        //    // Convert the extracted bytes to a single float
-                        //    float singleFloat = BitConverter.ToSingle(bytes, 0);
-                        //    floatList.Add(singleFloat);
-                        //}
-                        //returnRaster.AddBand(floatList.Cast<dynamic>());
                     }
                     else if (PlanarConfig.CONTIG == PlanarConfig.SEPARATE)
                     {  // SEPARATE is planar -- one strip per band -- rarely used
@@ -276,6 +249,11 @@ namespace GeoTBelt.GeoTiff
                                 tifData.ReadScanline(buf, row, s);
                         }
                     }
+                    else if (tifData.IsTiled() == true)
+                    {
+                        throw new DataMisalignedException(
+                            "Unable to read tiled Tiff files. Read operation failed.");
+                    }
                     else
                     {
                         throw new DataMisalignedException(
@@ -283,21 +261,6 @@ namespace GeoTBelt.GeoTiff
                     }
                 }
 
-                //tifData.ReadEncodedStrip(0, raster, raster.Length);
-
-                //if(returnRaster.TileOffsets != null && 
-                //    returnRaster.TileOffsets.Length > 0)
-                // readByTileMethod
-
-                int[] rstr;
-                int numBands = (int)tags["SamplesPerPixel"];
-                var directoryCount = tifData.NumberOfDirectories();  // still exploratory code
-                for (int i = 0; i < directoryCount; i++)
-                {
-                    rstr = new int[imageSize * numBands];
-                }
-                //bool rslt = tifData.ReadRGBAImage(width, height, rstr);
-                tifData.IsTiled();
                 #endregion Read data bands
 
                 }
