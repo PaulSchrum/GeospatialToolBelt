@@ -1,5 +1,5 @@
 ﻿using BitMiracle.LibTiff.Classic;
-//using GeoTBelt.GeoTiff;
+using GeoTBelt.GeoTiff;
 using GeoTBelt.Grid;
 using System.Collections;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -75,10 +75,11 @@ namespace GeoTBelt
         }
         public T NoDataValue { get; protected set; }
         internal Type CellDataType { get; set; } = null;
-        public int CellCount { get; protected set; }
-        public int BandCount { get; protected set; }
+        public int CellCount { get; internal set; }
+        public int BandCount { get; internal set; }
         public GridInstance Grid { get; protected set; }
         public List<T> DataFrame { get; private set; }
+        private T[] dataFrameAsArray { get; set; }
         //public List<Band> bands { get; internal set; } = new List<Band>();
 
 
@@ -112,8 +113,8 @@ namespace GeoTBelt
             }
             else if (considerGeoTiff(fileType))
             {
-                throw new NotImplementedException("GeoTiff");
-                //returnRaster = GeoTiffHelper.ReadGeoTiff(fullPath);
+                //throw new NotImplementedException("GeoTiff");
+                returnRaster = GeoTiffHelper.ReadGeoTiff<T>(fullPath);
                 //.populateRasterFromTiffFile(fullPath);
             }
             else
@@ -125,7 +126,7 @@ namespace GeoTBelt
             return returnRaster;
         }
 
-        public T GetValueAt(int row, int column, int band=0) 
+        public T GetValueAt(int row, int column, int band=0)
         { 
             int linearIndex = this.Grid.AsArrayIndex(row, column);
             return DataFrame[linearIndex];
@@ -198,7 +199,7 @@ namespace GeoTBelt
 
                 BandCount = 1;
                 CellCount = numColumns * numRows * BandCount;
-                T[] tempStorage = new T[CellCount];
+                CreateDataEmptyFrame();
 
                 string line;
                 int rowCounter = -1;
@@ -213,11 +214,11 @@ namespace GeoTBelt
                     foreach (var entry in lineList)
                     {
                         columnCounter++;
-                        tempStorage[Grid.AsArrayIndex(columnCounter, rowCounter)] =
+                        dataFrameAsArray[Grid.AsArrayIndex(columnCounter, rowCounter)] =
                             ParseStringToNumber(entry);
                     }
                 }
-                this.DataFrame = tempStorage.ToList();
+                this.DataFrame = dataFrameAsArray.ToList();
             }
         }
 
@@ -339,6 +340,12 @@ namespace GeoTBelt
                 filename.EndsWith("geotif") ||
                 filename.EndsWith("gtif") ||
                 filename.EndsWith("gtiff");
+        }
+
+        internal void CreateDataEmptyFrame()
+        {
+            CellCount = numColumns * numRows * BandCount;
+            dataFrameAsArray = new T[CellCount];
         }
     }
 

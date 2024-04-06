@@ -187,9 +187,16 @@ namespace GeoTBelt.GeoTiff
                 #endregion GeoTiffRaster tags
 
                 #region Read data bands
+
                 int bytesPerValue = (int) returnRaster.BitsPerSample / 8;
                 int valuesPerPixel = (int)returnRaster.SamplesPerPixel;
-                    
+                returnRaster.BandCount = valuesPerPixel;
+                returnRaster.CellCount = returnRaster.numColumns *
+                    returnRaster.numRows * returnRaster.BandCount;
+                returnRaster.CreateDataEmptyFrame();
+                //start here. Add values one at a time to dataFrameAsArray
+                // then ToList it.
+
                 returnRaster.CellDataType = 
                     determineType(returnRaster.SampleFormat, 
                     returnRaster.BitsPerSample);
@@ -231,15 +238,15 @@ namespace GeoTBelt.GeoTiff
                         }
                         if(!ScanLineApproachSucceeded)
                         {
-                            tryReadingAsTiles(tifData, returnRaster);
-                            throw new Exception("ScanLineApproachSucceeded failed.");
+                            //tryReadingAsTiles(tifData, returnRaster);
+                            throw new Exception("ScanLineApproachSucceeded failed. Not able to read as tiles.");
                             // return tryReadAsBlocks();
                         }
-                        foreach (List<Byte> aByteList in byteLists)
-                        {
-                            returnRaster.AddBand(aByteList.ToArray(),
-                                    returnRaster.CellDataType);
-                        }
+                        //////foreach (List<Byte> aByteList in byteLists)
+                        //////{
+                        //////    returnRaster.AddBand(aByteList.ToArray(),
+                        //////            returnRaster.CellDataType);
+                        //////}
                         string dbg = "debugging";
                         //int bytesPerItem = 32 / 8;
                         //List<float> floatList = new List<float>();

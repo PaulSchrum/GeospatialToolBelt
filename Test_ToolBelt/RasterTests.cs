@@ -95,67 +95,68 @@ namespace Test_ToolBelt
 
         private static void initializeSingleBandTiff()
         {
-            if (geotiffraster_singleband is null)
+            if (geoTiffRaster_singleBand is null)
             {
                 // geoTiffFileName = "NCSU Biltmore Hall small uncomp.tif";
                 geoTiffFileName_singleBand = "TestData_00765413_uncompressed.tif";
                 geoTiffFileFullPath_singleBand = Path.Combine(currentDirectory, geoTiffFileName_singleBand);
-                geoTiffRaster_singleBand = (GeoTiffRaster)Raster.Load(geoTiffFileFullPath_singleBand);
+                geoTiffRaster_singleBand = 
+                    (GeoTiffRaster<float>)Raster<float>.Load
+                    (geoTiffFileFullPath_singleBand);
             }
         }
 
-        [Ignore]
         [TestMethod]
         public void GeoTiff_PopulatesSingleBand()
         {
-            //initializeSingleBandTiff();
-            //Assert.IsNotNull(geoTiffRaster_singleBand);
-            
-            //Assert.AreEqual(
-            //    expected: 2, 
-            //    actual: geoTiffRaster_singleBand.RowsPerStrip);
+            initializeSingleBandTiff();
+            Assert.IsNotNull(geoTiffRaster_singleBand);
 
-            //Assert.AreEqual(expected: 1,
-            //    actual: geoTiffRaster_singleBand.bands.Count);
+            Assert.AreEqual(
+                expected: 2,
+                actual: geoTiffRaster_singleBand.RowsPerStrip);
 
-            //float actual0_0 = (float) geoTiffRaster_singleBand.bands[0].At(0, 0);
-            //Assert.AreEqual(expected: 4477.26f, actual: actual0_0, delta: 0.0001);
+            Assert.AreEqual(expected: 1,
+                actual: geoTiffRaster_singleBand.BandCount);
 
-            //float actual799_799 = (float)geoTiffRaster_singleBand.bands[0].At(799, 799);
-            //Assert.AreEqual(expected: 5055.912f, actual: actual799_799, delta: 0.0001);
+            float actual0_0 = geoTiffRaster_singleBand.GetValueAt(0, 0);
+            Assert.AreEqual(expected: 4477.26f, actual: actual0_0, delta: 0.0001);
 
-            //float actual798_797 = (float)geoTiffRaster_singleBand.bands[0].At(798, 797);
-            //Assert.AreEqual(expected: 5055.26f, actual: actual798_797, delta: 0.0001);
+            float actual799_799 = geoTiffRaster_singleBand.GetValueAt(799, 799);
+            Assert.AreEqual(expected: 5055.912f, actual: actual799_799, delta: 0.0001);
 
-            //bool exceptionThrown = false;
-            //try
-            //{
-            //    float fails = (float)geoTiffRaster_singleBand.bands[0].At(800, 800);
-            //}
-            //catch (IndexOutOfRangeException)
-            //{ exceptionThrown = true; } 
-            //catch (Exception ex) { }
-            //Assert.IsTrue(exceptionThrown);
+            float actual798_797 = geoTiffRaster_singleBand.GetValueAt(798, 797);
+            Assert.AreEqual(expected: 5055.26f, actual: actual798_797, delta: 0.0001);
 
-            //exceptionThrown = false;
-            //try
-            //{
-            //    float fails = (float)geoTiffRaster_singleBand.bands[0].At(100, 800);
-            //}
-            //catch (IndexOutOfRangeException)
-            //{ exceptionThrown = true; }
-            //catch (Exception ex) { }
-            //Assert.IsTrue(exceptionThrown);
+            bool exceptionThrown = false;
+            try
+            {
+                float fails = geoTiffRaster_singleBand.GetValueAt(800, 800);
+            }
+            catch (IndexOutOfRangeException)
+            { exceptionThrown = true; }
+            catch (Exception ex) { }
+            Assert.IsTrue(exceptionThrown);
 
-            //exceptionThrown = false;
-            //try
-            //{
-            //    float fails = (float)geoTiffRaster_singleBand.bands[0].At(800, 100);
-            //}
-            //catch (IndexOutOfRangeException)
-            //{ exceptionThrown = true; }
-            //catch (Exception ex) { }
-            //Assert.IsTrue(exceptionThrown);
+            exceptionThrown = false;
+            try
+            {
+                float fails = geoTiffRaster_singleBand.GetValueAt(100, 800);
+            }
+            catch (IndexOutOfRangeException)
+            { exceptionThrown = true; }
+            catch (Exception ex) { }
+            Assert.IsTrue(exceptionThrown);
+
+            exceptionThrown = false;
+            try
+            {
+                float fails = geoTiffRaster_singleBand.GetValueAt(800, 100);
+            }
+            catch (IndexOutOfRangeException)
+            { exceptionThrown = true; }
+            catch (Exception ex) { }
+            Assert.IsTrue(exceptionThrown);
         }
 
 
