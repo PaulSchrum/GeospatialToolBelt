@@ -100,7 +100,7 @@ namespace Test_ToolBelt
                 // geoTiffFileName = "NCSU Biltmore Hall small uncomp.tif";
                 geoTiffFileName_singleBand = "TestData_00765413_uncompressed.tif";
                 geoTiffFileFullPath_singleBand = Path.Combine(currentDirectory, geoTiffFileName_singleBand);
-                geoTiffRaster_singleBand = 
+                geoTiffRaster_singleBand =
                     (GeoTiffRaster<float>)Raster<float>.Load
                     (geoTiffFileFullPath_singleBand);
             }

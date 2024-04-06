@@ -190,12 +190,9 @@ namespace GeoTBelt.GeoTiff
 
                 int bytesPerValue = (int) returnRaster.BitsPerSample / 8;
                 int valuesPerPixel = (int)returnRaster.SamplesPerPixel;
+                int pixelSpan = bytesPerValue * valuesPerPixel;
                 returnRaster.BandCount = valuesPerPixel;
-                returnRaster.CellCount = returnRaster.numColumns *
-                    returnRaster.numRows * returnRaster.BandCount;
                 returnRaster.CreateDataEmptyFrame();
-                //start here. Add values one at a time to dataFrameAsArray
-                // then ToList it.
 
                 returnRaster.CellDataType = 
                     determineType(returnRaster.SampleFormat, 
@@ -212,19 +209,26 @@ namespace GeoTBelt.GeoTiff
                 {   // readByStripMethod
                     int bytesToRead = tifData.ScanlineSize();
                     byte[] buf = new byte[bytesToRead];
+                    byte[] cellBuffer = new byte[bytesPerValue];
                     if ((int) PlanarConfig.CONTIG == (int) returnRaster.PlanarConfiguration)
                     {   // CONTIG is chunky -- all bands in one strip
                         for (int row = 0; row < returnRaster.numRows; row++)
                         {   // Parse and rearrange bytes into each byteList
                             tifData.ReadScanline(buf, row);
 
-                            for(int position = 0; position < bytesToRead; position++)
+                            for(int position = 0; position < bytesToRead; position+=bytesPerValue)
                             {
-                                dynamic tmp = buf[position];
-                                byteLists[position % valuesPerPixel].Add(buf[position]);
+                                T receiver = ConvertFromByteArrayTo<T>(buf, position);
+                                returnRaster.DataFrame[position/bytesPerValue] = receiver;
                             }
 
                         }
+
+                        // start here.
+                        // We have successfully read one scanline, but that's all.
+                        // Now we have to read each scanline and start the DataFrame index
+                        // interior to the array so as not to overwrite the previous scanlines.
+
                         string debugTemp = "88";
                         bool ScanLineApproachSucceeded = false;
                         foreach(List<Byte> aByteList in byteLists)
@@ -300,6 +304,17 @@ namespace GeoTBelt.GeoTiff
 
             return returnRaster;
         }
+
+        public static T ConvertFromByteArrayTo<T>(byte[] buffer, int startIndex) 
+            where T : struct
+        {
+            ReadOnlySpan<byte> span = 
+                new ReadOnlySpan<byte>(buffer, startIndex, Marshal.SizeOf<T>());
+
+            return MemoryMarshal.Read<T>(span);
+        }
+
+
 
         private static Type determineType(int? sampleFormat, int? bitsPerSample)
         {

@@ -78,8 +78,7 @@ namespace GeoTBelt
         public int CellCount { get; internal set; }
         public int BandCount { get; internal set; }
         public GridInstance Grid { get; protected set; }
-        public List<T> DataFrame { get; private set; }
-        private T[] dataFrameAsArray { get; set; }
+        public T[] DataFrame { get; internal set; }
         //public List<Band> bands { get; internal set; } = new List<Band>();
 
 
@@ -214,11 +213,10 @@ namespace GeoTBelt
                     foreach (var entry in lineList)
                     {
                         columnCounter++;
-                        dataFrameAsArray[Grid.AsArrayIndex(columnCounter, rowCounter)] =
+                        DataFrame[Grid.AsArrayIndex(columnCounter, rowCounter)] =
                             ParseStringToNumber(entry);
                     }
                 }
-                this.DataFrame = dataFrameAsArray.ToList();
             }
         }
 
@@ -345,7 +343,7 @@ namespace GeoTBelt
         internal void CreateDataEmptyFrame()
         {
             CellCount = numColumns * numRows * BandCount;
-            dataFrameAsArray = new T[CellCount];
+            DataFrame = new T[CellCount];
         }
     }
 
