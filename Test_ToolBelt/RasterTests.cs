@@ -119,7 +119,7 @@ namespace Test_ToolBelt
             Assert.AreEqual(expected: 1,
                 actual: geoTiffRaster_singleBand.BandCount);
 
-            float actual0_0 = geoTiffRaster_singleBand.GetValueAt(0, 0);  // start here. This line fails.
+            float actual0_0 = geoTiffRaster_singleBand.GetValueAt(0, 0);
             Assert.AreEqual(expected: 4477.26f, actual: actual0_0, delta: 0.0001);
 
             float actual799_799 = geoTiffRaster_singleBand.GetValueAt(799, 799);
@@ -127,6 +127,25 @@ namespace Test_ToolBelt
 
             float actual798_797 = geoTiffRaster_singleBand.GetValueAt(798, 797);
             Assert.AreEqual(expected: 5057.60498f, actual: actual798_797, delta: 0.0001);
+
+
+            Assert.AreEqual(
+                expected: 642_500f,
+                actual: geoTiffRaster_singleBand.bottomYCoordinate,
+                delta: 0.005);
+            Assert.AreEqual(
+                expected: 645_000,
+                actual: geoTiffRaster_singleBand.topYCoordinate,
+                delta: 0.005);
+            Assert.AreEqual(
+                expected: 750_000f,
+                actual: geoTiffRaster_singleBand.leftXCoordinate,
+                delta: 0.005);
+            Assert.AreEqual(
+                expected: 752_500f,
+                actual: geoTiffRaster_singleBand.rightXCoordinate,
+                delta: 0.005);
+
 
             bool exceptionThrown = false;
             try
