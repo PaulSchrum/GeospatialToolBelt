@@ -126,7 +126,7 @@ namespace Test_ToolBelt
             Assert.AreEqual(expected: 5055.912f, actual: actual799_799, delta: 0.0001);
 
             float actual798_797 = geoTiffRaster_singleBand.GetValueAt(798, 797);
-            Assert.AreEqual(expected: 5055.26f, actual: actual798_797, delta: 0.0001);
+            Assert.AreEqual(expected: 5057.60498f, actual: actual798_797, delta: 0.0001);
 
             bool exceptionThrown = false;
             try

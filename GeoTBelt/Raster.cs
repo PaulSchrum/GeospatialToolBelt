@@ -194,7 +194,7 @@ namespace GeoTBelt
                 topYCoordinate = bottomYCoordinate + cellSize * numRows;
                 anchorPoint = new GTBpoint(leftXCoordinate, topYCoordinate);
 
-                Grid = new GridInstance(numColumns, numRows);
+                SetupGrid();
 
                 BandCount = 1;
                 CellCount = numColumns * numRows * BandCount;
@@ -218,6 +218,11 @@ namespace GeoTBelt
                     }
                 }
             }
+        }
+
+        internal void SetupGrid()
+        {
+            Grid = new GridInstance(numColumns, numRows);
         }
 
         private T ParseStringToNumber(string strVal)

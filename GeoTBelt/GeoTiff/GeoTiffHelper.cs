@@ -1,5 +1,6 @@
 ﻿using BitMiracle.LibTiff.Classic;
 using GeoTBelt.Grid;
+using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -197,6 +198,8 @@ namespace GeoTBelt.GeoTiff
                 returnRaster.CellDataType = 
                     determineType(returnRaster.SampleFormat, 
                     returnRaster.BitsPerSample);
+
+                returnRaster.SetupGrid();
 
                 List<List<Byte>> byteLists = new List<List<byte>>();
                 for(int i=0; i < valuesPerPixel; i++)
