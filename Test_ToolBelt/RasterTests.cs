@@ -107,6 +107,65 @@ namespace Test_ToolBelt
         }
 
         [TestMethod]
+        public void GeoTiff_LoadSingleBand_ModifyIt_SaveNewGeoTiff()
+        {
+            float addValue = 5f;
+
+            var newOutputFileName = "OutputTest1.tiff";
+            var newOutputFileFullName = Path.Combine(currentDirectory, newOutputFileName);
+            if(File.Exists(newOutputFileFullName))
+                File.Delete(newOutputFileFullName);
+
+            initializeSingleBandTiff();
+
+            int columnCount = geoTiffRaster_singleBand.numColumns;
+            int rowCount = geoTiffRaster_singleBand.numRows;
+
+            for(int column = 0; column < columnCount; column++) 
+            {
+                for(int row = 0; row < rowCount; row++) 
+                { 
+                    float cellValue = geoTiffRaster_singleBand.GetValueAt(column, row) + addValue;
+                    geoTiffRaster_singleBand.SetValueAt(cellValue, column, row);
+                }
+            }
+
+            try
+            {
+                //geoTiffRaster_singleBand.SaveAs(newOutputFileFullName);
+            }
+            catch 
+            {
+                if (File.Exists(newOutputFileFullName))
+                    File.Delete(newOutputFileFullName);
+            }
+
+            // Test the newly created raster for correctness.
+            GeoTiffRaster<float> geoTiffOut = (GeoTiffRaster<float>)Raster<float>
+                .Load(newOutputFileFullName);
+
+            Assert.AreEqual(expected: 2,
+                actual: geoTiffOut.RowsPerStrip);
+
+            Assert.AreEqual(expected: 1,
+                actual: geoTiffOut.BandCount);
+
+            float actual0_0 = geoTiffOut.GetValueAt(0, 0);
+            Assert.AreEqual(expected: 4477.26f + addValue, actual: actual0_0, delta: 0.0001);
+
+            float actual799_799 = geoTiffOut.GetValueAt(799, 799);
+            Assert.AreEqual(expected: 5055.912f + addValue, actual: actual799_799, delta: 0.0001);
+
+            float actual798_797 = geoTiffOut.GetValueAt(798, 797);
+            Assert.AreEqual(expected: 5057.60498f + addValue, actual: actual798_797, delta: 0.0001);
+
+            Assert.AreEqual(
+                expected: 642_500f,
+                actual: geoTiffOut.bottomYCoordinate,
+                delta: 0.005);
+        }
+
+        [TestMethod]
         public void GeoTiff_PopulatesSingleBand()
         {
             initializeSingleBandTiff();
