@@ -132,6 +132,7 @@ namespace Test_ToolBelt
 
             try
             {
+                int i = 7;
                 //geoTiffRaster_singleBand.SaveAs(newOutputFileFullName);
             }
             catch 

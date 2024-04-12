@@ -271,6 +271,25 @@ namespace GeoTBelt.GeoTiff
             return returnRaster;
         }
 
+        public static void WriteGeoTiff<T>(GeoTiffRaster<T> tiff, 
+            string fileToCreate) where T : struct
+        {
+            using (Tiff outFile = Tiff.Open(fileToCreate, "w"))
+            {
+                var v = outFile.GetAsInt("thingy");
+                outFile.SetFromInt("ImageWidth", tiff.numColumns);
+                outFile.SetFromInt("ImageLength", tiff.numRows);
+
+                if(tiff.BitsPerSample is not null)
+                    outFile.SetFromInt("BitsPerSample", (int)tiff.BitsPerSample);
+
+                outFile.SetFromShort("Compression", (short) Compression.NONE);
+                outFile.SetFromShort("PhotometricInterpretation",
+                    (short)Photometric.MINISBLACK);
+                // start here. Matches with current line 635.
+            }
+        }
+
         public static T ConvertFromByteArrayTo<T>(byte[] buffer, int startIndex) 
             where T : struct
         {
@@ -741,6 +760,14 @@ namespace GeoTBelt.GeoTiff
 
     public static class TifExtensionMethods
     {
+        public static bool SetFromShort(this Tiff tif,
+            string varName, short value)
+        {
+            int id = AllTags.Tag(varName).IdInteger;
+            return tif.SetField((TiffTag)id, value);
+        }
+
+
         public static short? GetAsShort(this Tiff tif, string varName)
         {
             int id = AllTags.Tag(varName).IdInteger;
@@ -750,6 +777,13 @@ namespace GeoTBelt.GeoTiff
             return (value[0]).ToShort();
         }
 
+        public static bool SetFromInt(this Tiff tif, 
+            string varName, int value)
+        {
+            int id = AllTags.Tag(varName).IdInteger;
+            return tif.SetField((TiffTag)id, value);
+        }
+
         public static int? GetAsInt(this Tiff tif, string varName)
         {
             int id = AllTags.Tag(varName).IdInteger;
@@ -757,6 +791,13 @@ namespace GeoTBelt.GeoTiff
 
             if (value is null) return null;
             return (value[0]).ToInt();
+        }
+
+        public static bool SetFromString(this Tiff tif,
+            string varName, string value)
+        {
+            int id = AllTags.Tag(varName).IdInteger;
+            return tif.SetField((TiffTag)id, value);
         }
 
         public static string? GetAsString(this Tiff tif, string varName)
@@ -769,6 +810,13 @@ namespace GeoTBelt.GeoTiff
             return (value[1]).ToString();
         }
 
+        public static bool SetFromDouble(this Tiff tif, 
+            string varName, double value)
+        {
+            int id = AllTags.Tag(varName).IdInteger;
+            return tif.SetField((TiffTag)id, value);
+        }
+
         public static double? GetAsDouble(this Tiff tif, string varName)
         {
             int id = AllTags.Tag(varName).IdInteger;
@@ -776,6 +824,13 @@ namespace GeoTBelt.GeoTiff
 
             if (value is null) return null;
             return (value[0]).ToDouble();
+        }
+
+        public static bool SetFromShortArray(this Tiff tif,
+            string varName, short[] value)
+        {
+            int id = AllTags.Tag(varName).IdInteger;
+            return tif.SetField((TiffTag)id, value);
         }
 
         public static short[]? GetAsShortArray(this Tiff tif, string varName)
@@ -805,6 +860,14 @@ namespace GeoTBelt.GeoTiff
             return null;
         }
 
+        public static bool SetFromDoubleArray(this Tiff tif,
+            string varName, double[] value)
+        {
+            int id = AllTags.Tag(varName).IdInteger;
+            return tif.SetField((TiffTag)id, value);
+        }
+
+
         public static double[]? GetAsDoubleArray(this Tiff tif, string varName)
         {
             int id = AllTags.Tag(varName).IdInteger;
@@ -831,6 +894,15 @@ namespace GeoTBelt.GeoTiff
 
             return null;
         }
+
+        public static bool SetFromLongArray(this Tiff tif,
+            string varName, long[] value)
+        {
+            int id = AllTags.Tag(varName).IdInteger;
+            return tif.SetField((TiffTag)id, value);
+        }
+
+
         public static long[]? GetAsLongArray(this Tiff tif, string varName)
         {
             int id = AllTags.Tag(varName).IdInteger;
