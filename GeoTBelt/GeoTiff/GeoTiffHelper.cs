@@ -1,6 +1,7 @@
 ﻿using BitMiracle.LibTiff.Classic;
 using GeoTBelt.Grid;
 using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -271,25 +272,6 @@ namespace GeoTBelt.GeoTiff
             return returnRaster;
         }
 
-        public static void WriteGeoTiff<T>(GeoTiffRaster<T> tiff, 
-            string fileToCreate) where T : struct
-        {
-            using (Tiff outFile = Tiff.Open(fileToCreate, "w"))
-            {
-                var v = outFile.GetAsInt("thingy");
-                outFile.SetFromInt("ImageWidth", tiff.numColumns);
-                outFile.SetFromInt("ImageLength", tiff.numRows);
-
-                if(tiff.BitsPerSample is not null)
-                    outFile.SetFromInt("BitsPerSample", (int)tiff.BitsPerSample);
-
-                outFile.SetFromShort("Compression", (short) Compression.NONE);
-                outFile.SetFromShort("PhotometricInterpretation",
-                    (short)Photometric.MINISBLACK);
-                // start here. Matches with current line 635.
-            }
-        }
-
         public static T ConvertFromByteArrayTo<T>(byte[] buffer, int startIndex) 
             where T : struct
         {
@@ -427,7 +409,7 @@ namespace GeoTBelt.GeoTiff
         //    //int rasterByteOffset = rasterIndex * 4;
 
 
-        //    // Starting here
+        //    // 
         //    // Rework logic to use the new Tiled coordinate system framework I developed.
         //    List<byte[]> byteBlocks = new List<byte[]>();
 
@@ -643,8 +625,8 @@ namespace GeoTBelt.GeoTiff
             returnDict["PlanarConfiguration"] = tif
                 .GetAsShort("PlanarConfiguration");
 
-            returnDict["TileWidth"] = tif.GetAsShort("TileWidth");
-            returnDict["TileLength"] = tif.GetAsShort("TileLength");
+            //returnDict["TileWidth"] = tif.GetAsShort("TileWidth");
+            //returnDict["TileLength"] = tif.GetAsShort("TileLength");
             returnDict["TileOffsets"] = tif.GetAsLongArray("TileOffsets");
             returnDict["TileByteCounts"] = tif.GetAsLongArray("TileByteCounts");
             returnDict["TileWidth"] = tif.GetAsInt("TileWidth");
@@ -733,6 +715,91 @@ namespace GeoTBelt.GeoTiff
             return returnDict;
         }
 
+        public static void WriteGeoTiff<T>(GeoTiffRaster<T> tiff,
+            string fileToCreate) where T : struct
+        {
+            // aliases
+            int width = tiff.numColumns;
+            int height = tiff.numRows;
+            int typeSize = (int)tiff.BitsPerSample;
+
+            using (Tiff outFile = Tiff.Open(fileToCreate, "w"))
+            {
+                outFile.CreateDirectory();
+
+                #region writeHeaderData
+                outFile.SetFromInt("ImageWidth", width);
+                outFile.SetFromInt("ImageLength", height);
+                var grid = new Grid.GridInstance(width, height);
+
+                if (tiff.BitsPerSample is not null)
+                    outFile.SetFromInt("BitsPerSample", typeSize);
+
+                outFile.SetFromShort("Compression", (short)Compression.NONE);
+                outFile.SetFromShort("PhotometricInterpretation",
+                    (short)Photometric.MINISBLACK);
+
+                // strip offsets -- this needs a study
+                // strip byte counts -- same
+                // rows per strip -- same
+
+                outFile.SetFromInt("SamplesPerPixel", (int)tiff.BandCount);
+                outFile.SetFromShort("PlanarConfiguration", (short)1);
+
+                // TileOffsets same as strip offsets for non-tiled tiff
+                // TileByteCounts same as strip by counts for non-tiled
+
+                // TileWidth and TileLength not written for non-tiled
+                // ExtraSamples not written -- not sure what it is for
+
+                short sampleFormat = GetBPSintFromType<T>();
+                outFile.SetFromShort("SampleFormat", sampleFormat);
+
+                outFile.SetFromDoubleArray("ModelPixelScaleTag", 
+                    new double[] { 3.125d, 3.125d, 0d });
+
+                var ap = tiff.anchorPoint;
+                outFile.SetFromDoubleArray("ModelTiepointTag",
+                    new double[] {0d, 0d, 0d, ap.X, ap.Y, ap.Z });
+                #endregion writeHeaderData
+
+                #region writeRasterData
+
+                byte[] cellBuffer = new byte[typeSize];
+                byte[] stripBuffer = new byte[width * typeSize];
+
+                for(int row=0; row < height; row++)
+                {
+                    for(int column=0; column < width; column++)
+                    {
+                        T[] cellValue = new T[] { tiff.GetValueAt(row, column) };
+
+                        Buffer.BlockCopy(cellValue, 0, cellBuffer, 0, typeSize);
+                        int rowArrayPosition = column * typeSize;
+                        Array.Copy(cellBuffer, 0, stripBuffer, rowArrayPosition, typeSize);
+                    }
+                    outFile.WriteScanline(stripBuffer, row);
+                }
+                #endregion // writeRasterData
+
+                outFile.WriteDirectory();
+                outFile.Flush();
+            }
+        }
+
+        private static short GetBPSintFromType<T>()
+        {
+            Type dataType = typeof(T);
+            if (dataType == typeof(System.UInt32)) 
+                return GeoTiffRaster<uint>.BPS_UnsignedInteger;
+
+            if (dataType == typeof(System.Int32))
+                return GeoTiffRaster<uint>.BPS_SignedInteger;
+
+            return GeoTiffRaster<uint>.BPS_IEEEFP;
+
+        }
+
         // Non-production code. For understanding what is going on.
         private static void ExploreTiff(Tiff tif, string varName)
         {
@@ -754,7 +821,6 @@ namespace GeoTBelt.GeoTiff
                 // Handle the case where the expected data is not present
             }
         }
-
 
     }
 

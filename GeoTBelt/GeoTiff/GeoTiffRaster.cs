@@ -59,5 +59,9 @@ namespace GeoTBelt.GeoTiff
         public static short PC_Separate { get { return 2; }   }
         #endregion PlanarConfiguration
 
+        public void SaveAs(string outFileName)
+        {
+            GeoTiffHelper.WriteGeoTiff(this, outFileName);
+        }
     }
 }
