@@ -718,33 +718,61 @@ namespace GeoTBelt.GeoTiff
         public static void WriteGeoTiff<T>(GeoTiffRaster<T> tiff,
             string fileToCreate) where T : struct
         {
+            /// Necessary callback. Found at
+            /// https://stackoverflow.com/a/52492819/1339950
+            static void TagExtender(Tiff tiff)
+            {
+                TiffFieldInfo[] tiffFieldInfo =
+                {
+                    new TiffFieldInfo(
+                        TiffTag.GEOTIFF_MODELTIEPOINTTAG, 
+                        6, 6, TiffType.DOUBLE, FieldBit.Custom, 
+                        false, true, "MODELTIEPOINTTAG"),
+
+                    new TiffFieldInfo(
+                        TiffTag.GEOTIFF_MODELPIXELSCALETAG,
+                        3, 3, TiffType.DOUBLE, FieldBit.Custom, 
+                        false, true, "MODELPIXELSCALETAG")
+                };
+
+                tiff.MergeFieldInfo(tiffFieldInfo, tiffFieldInfo.Length);
+            }
+
+            Tiff.SetTagExtender(TagExtender);
+
             // aliases
             int width = tiff.numColumns;
             int height = tiff.numRows;
             int typeSize = (int)tiff.BitsPerSample;
+            int typeSizeInBytes = typeSize / 8;
 
             using (Tiff outFile = Tiff.Open(fileToCreate, "w"))
             {
                 outFile.CreateDirectory();
 
                 #region writeHeaderData
-                outFile.SetFromInt("ImageWidth", width);
-                outFile.SetFromInt("ImageLength", height);
+                bool success = true;
+
+                success |= outFile.SetFromInt("ImageWidth", width);
+                success = outFile.SetFromInt("ImageLength", height);
                 var grid = new Grid.GridInstance(width, height);
 
                 if (tiff.BitsPerSample is not null)
-                    outFile.SetFromInt("BitsPerSample", typeSize);
+                    success = outFile.SetFromInt("BitsPerSample", typeSize);
 
-                outFile.SetFromShort("Compression", (short)Compression.NONE);
-                outFile.SetFromShort("PhotometricInterpretation",
+                success = outFile.SetFromShort("Compression", (short)Compression.NONE);
+                success = outFile.SetFromShort("PhotometricInterpretation",
                     (short)Photometric.MINISBLACK);
 
                 // strip offsets -- this needs a study
                 // strip byte counts -- same
-                // rows per strip -- same
 
-                outFile.SetFromInt("SamplesPerPixel", (int)tiff.BandCount);
-                outFile.SetFromShort("PlanarConfiguration", (short)1);
+                success = outFile.SetField(TiffTag.ROWSPERSTRIP, (int)tiff.RowsPerStrip);
+                success = outFile.SetFromInt("SamplesPerPixel", (int)tiff.BandCount);
+                success = outFile.SetFromShort("PlanarConfiguration", (short)1);
+
+                success = outFile.SetField(TiffTag.PLANARCONFIG, PlanarConfig.CONTIG);
+                success = outFile.SetField(TiffTag.PHOTOMETRIC, Photometric.MINISBLACK);
 
                 // TileOffsets same as strip offsets for non-tiled tiff
                 // TileByteCounts same as strip by counts for non-tiled
@@ -755,28 +783,39 @@ namespace GeoTBelt.GeoTiff
                 short sampleFormat = GetBPSintFromType<T>();
                 outFile.SetFromShort("SampleFormat", sampleFormat);
 
-                outFile.SetFromDoubleArray("ModelPixelScaleTag", 
-                    new double[] { 3.125d, 3.125d, 0d });
+                double[] scaleTag = new double[] {
+                    (double)3.125, (double)3.125, (double)0.0 };
+                success = outFile.SetField(
+                    TiffTag.GEOTIFF_MODELPIXELSCALETAG,
+                    3, scaleTag);
 
-                var ap = tiff.anchorPoint;
-                outFile.SetFromDoubleArray("ModelTiepointTag",
-                    new double[] {0d, 0d, 0d, ap.X, ap.Y, ap.Z });
+                double[] anchorPt = new double[]
+                {
+                    0d, 0d, 0d, tiff.anchorPoint.X,
+                    tiff.anchorPoint.Y, tiff.anchorPoint.Z
+                };
+                success = outFile.SetField(
+                    TiffTag.GEOTIFF_MODELTIEPOINTTAG,
+                    6, anchorPt);
+
                 #endregion writeHeaderData
 
                 #region writeRasterData
 
-                byte[] cellBuffer = new byte[typeSize];
-                byte[] stripBuffer = new byte[width * typeSize];
+                byte[] cellBuffer = new byte[typeSizeInBytes];
+                byte[] stripBuffer = new byte[width * typeSizeInBytes];
 
                 for(int row=0; row < height; row++)
                 {
                     for(int column=0; column < width; column++)
                     {
-                        T[] cellValue = new T[] { tiff.GetValueAt(row, column) };
+                        T[] cellValue = new T[] { tiff.GetValueAt(column, row) };
 
-                        Buffer.BlockCopy(cellValue, 0, cellBuffer, 0, typeSize);
-                        int rowArrayPosition = column * typeSize;
-                        Array.Copy(cellBuffer, 0, stripBuffer, rowArrayPosition, typeSize);
+                        Buffer.BlockCopy(cellValue, 0, 
+                            cellBuffer, 0, typeSizeInBytes);
+                        int rowArrayPosition = column * typeSizeInBytes;
+                        Array.Copy(cellBuffer, 0, 
+                            stripBuffer, rowArrayPosition, typeSizeInBytes);
                     }
                     outFile.WriteScanline(stripBuffer, row);
                 }
@@ -830,7 +869,8 @@ namespace GeoTBelt.GeoTiff
             string varName, short value)
         {
             int id = AllTags.Tag(varName).IdInteger;
-            return tif.SetField((TiffTag)id, value);
+            var res = tif.SetField((TiffTag)id, value);
+            return res;
         }
 
 
@@ -927,10 +967,10 @@ namespace GeoTBelt.GeoTiff
         }
 
         public static bool SetFromDoubleArray(this Tiff tif,
-            string varName, double[] value)
+            TiffTag ttag, double[] value)
         {
-            int id = AllTags.Tag(varName).IdInteger;
-            return tif.SetField((TiffTag)id, value);
+            var res = tif.SetField(ttag, value.Length, value);
+            return res;
         }
 
 
