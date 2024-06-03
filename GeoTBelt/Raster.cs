@@ -8,7 +8,8 @@ using System.Globalization;
 
 namespace GeoTBelt
 {
-    public class Raster<T> where T : struct
+    public class Raster<T> : GeoTBelt.IRaster<T>
+        where T : struct
     {
         public double cellSize
         {
@@ -131,11 +132,22 @@ namespace GeoTBelt
             return DataFrame[linearIndex];
         }
 
+        public T GetValueAt(int linearIndex, int band = 0)
+        {
+            return DataFrame[linearIndex];
+        }
+
+
         public void SetValueAt(T value, 
             int row, int column, int band=0)
         {
             int linearIndex = this.Grid.AsArrayIndex(row, column);
             DataFrame[linearIndex] = value;
+        }
+
+        public void SetValueAt(T value, int linearOffset, int band = 0)
+        {
+            DataFrame[linearOffset] = value;
         }
 
         #region Asc Raster Format

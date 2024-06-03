@@ -275,6 +275,7 @@ namespace GeoTBelt.GeoTiff
         public static T ConvertFromByteArrayTo<T>(byte[] buffer, int startIndex) 
             where T : struct
         {
+            var theSize = Marshal.SizeOf(typeof(T));
             ReadOnlySpan<byte> span = 
                 new ReadOnlySpan<byte>(buffer, startIndex, Marshal.SizeOf<T>());
 
