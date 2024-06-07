@@ -42,16 +42,24 @@ namespace Test_ToolBelt
 
             using (map)
             {
-                FloatPixel pixel = map.BufferPixel;
+                FloatPixel pixel = default;
                 float[] inMemoryTargetArray = new float[map.Dimensions.Rows * map.Dimensions.Columns];
                 int someIndex = 0;
+                int totalCellCount = map.Dimensions.Rows * map.Dimensions.Columns;
 
                 for (int i = 0; i < map.Dimensions.Rows * map.Dimensions.Columns; i++)
                 {
                     map.ReadBufferPixel();
-                    int mapValue = pixel.MapCode.Value;
+                    pixel = map.BufferPixel;
+                    float mapValue = pixel.MapCode.Value;
+                    if (mapValue != 0)
+                    {
+                        int jiminyCricket = 99;
+                    }
                     inMemoryTargetArray[someIndex++] = mapValue;
                 }
+                Assert.AreEqual(expected: totalCellCount,
+                    actual: someIndex);
             }
         }
     }

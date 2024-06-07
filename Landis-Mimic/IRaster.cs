@@ -15,7 +15,7 @@ namespace Landis_Mimic
 
     public interface IRaster<T> : IRaster
     {
-        T BufferPixel { get; }
+        T BufferPixel { get; set; }
     }
 
     public interface IInputRaster<T> : IRaster<T>
@@ -26,6 +26,7 @@ namespace Landis_Mimic
 
     public interface IOutputRaster<T> : IRaster<T>
     {
+        void WriteBufferPixel();
         void SetAtPosition(int offset, T value);
     }
 

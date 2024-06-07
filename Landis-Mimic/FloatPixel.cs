@@ -8,7 +8,7 @@ namespace Landis_Mimic
 {
     public class FloatPixel : Pixel
     {
-        public Band<int> MapCode = "The numeric code for each raster cell";
+        public Band<float> MapCode = "The numeric code for each raster cell";
 
         public FloatPixel()
         {

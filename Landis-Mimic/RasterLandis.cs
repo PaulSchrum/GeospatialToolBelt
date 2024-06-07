@@ -13,6 +13,12 @@ namespace Landis_Mimic
         System.Type basicType = typeof(TBasic);
         private int offsetCounter = -1;
 
+        private TPixel bufferPixel = new TPixel();
+        public TPixel BufferPixel 
+        {  get {return bufferPixel; } 
+           set { bufferPixel = value; } }
+
+
         private GeoTiffRaster<byte> byteRaster = null;
         private GeoTiffRaster<sbyte> sbyteRaster = null;
         private GeoTiffRaster<short> shortRaster = null;
@@ -113,8 +119,6 @@ namespace Landis_Mimic
 
         private bool disposedValue;
 
-        public TPixel BufferPixel { get; set; }
-
         public double CellSize { get { return TheRaster.cellSize; } }
 
         private Dimensions _dimensions = default;
@@ -145,8 +149,12 @@ namespace Landis_Mimic
         {
             offsetCounter++;
             TBasic pixelVal = TheRaster.GetValueAt(offsetCounter);
-            Pixel f = default;
-            this.BufferPixel = new TPixel();
+            //this.bufferPixel.
+        }
+
+        public void WriteBufferPixel()
+        {
+            throw new NotImplementedException ();
         }
 
         protected virtual void Dispose(bool disposing)
