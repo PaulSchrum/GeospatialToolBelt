@@ -12,7 +12,7 @@ namespace Landis_Mimic
     {
         internal LandisRaster() { }
 
-        private Raster<T> raster;
+        protected bool disposed = false;
         public Raster<T> theRaster { get; internal set; } = null;
 
         private int index = -1;
@@ -39,9 +39,7 @@ namespace Landis_Mimic
         }
 
         public void Dispose()
-        {
-            throw new NotImplementedException();
-        }
+        { }
 
         public int Count()
         {
