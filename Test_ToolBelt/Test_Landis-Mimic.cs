@@ -37,26 +37,21 @@ namespace Test_ToolBelt
         [TestMethod]
         public void ReadGeoTiff_IterateOverCells ()
         {
-            IInputRaster<FloatPixel> map = 
-                RasterFactory.OpenRaster<FloatPixel>(path);
+            IInputRaster<float> map = 
+                RasterFactory.OpenRaster<float>(path);
 
             using (map)
             {
-                FloatPixel pixel = default;
-                float[] inMemoryTargetArray = new float[map.Dimensions.Rows * map.Dimensions.Columns];
-                int someIndex = 0;
+                float pixelValue = default;
                 int totalCellCount = map.Dimensions.Rows * map.Dimensions.Columns;
+                float[] inMemoryTargetArray = new float[totalCellCount];
+                int someIndex = 0;
 
                 for (int i = 0; i < map.Dimensions.Rows * map.Dimensions.Columns; i++)
                 {
                     map.ReadBufferPixel();
-                    pixel = map.BufferPixel;
-                    float mapValue = pixel.MapCode.Value;
-                    if (mapValue != 0)
-                    {
-                        int jiminyCricket = 99;
-                    }
-                    inMemoryTargetArray[someIndex++] = mapValue;
+                    pixelValue = map.BufferPixel;
+                    inMemoryTargetArray[someIndex++] = pixelValue;
                 }
                 Assert.AreEqual(expected: totalCellCount,
                     actual: someIndex);
