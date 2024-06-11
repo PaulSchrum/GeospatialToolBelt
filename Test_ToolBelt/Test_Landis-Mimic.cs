@@ -55,6 +55,18 @@ namespace Test_ToolBelt
                 }
                 Assert.AreEqual(expected: totalCellCount,
                     actual: someIndex);
+
+                float actualValue = inMemoryTargetArray[0];
+                Assert.AreEqual(expected: 4477.260, actual: actualValue, delta: 0.01);
+
+                actualValue = inMemoryTargetArray[20];
+                Assert.AreEqual(expected: 4456.092, actual: actualValue, delta: 0.01);
+
+                actualValue = inMemoryTargetArray[640000-1];
+                Assert.AreEqual(expected: 5055.912, actual: actualValue, delta: 0.01);
+
+                actualValue = inMemoryTargetArray[640000-20];
+                Assert.AreEqual(expected: 5042.647, actual: actualValue, delta: 0.01);
             }
         }
     }
