@@ -21,8 +21,4 @@
     <ProjectReference Include="..\Landis-Mimic\Landis-Mimic.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Data\" />
-  </ItemGroup>
-
 </Project>

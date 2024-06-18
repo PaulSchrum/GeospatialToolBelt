@@ -72,7 +72,9 @@ namespace Landis_Mimic
 
         public void WriteBufferPixel()
         {
-            theRaster.SetValueAt(BufferPixel, ++index);
+            if(++index >= Count())
+                throw new IndexOutOfRangeException();
+            theRaster.SetValueAt(BufferPixel, index);
         }
 
     }

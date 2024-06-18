@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using BitMiracle.LibTiff.Classic;
 using GeoTBelt;
+using GeoTBelt.Grid;
 
 namespace GeoTBelt.GeoTiff
 {
@@ -95,7 +96,8 @@ namespace GeoTBelt.GeoTiff
             returnRaster.numColumns = numberOfColumns;
             returnRaster.numRows = numberOfRows;
             returnRaster.NoDataValueString = "-9999";
-            returnRaster.cellSize = cellSize;
+            returnRaster.cellSizeX = returnRaster.cellSizeY = cellSize;
+            returnRaster.BandCount = bandCount;
 
             returnRaster.anchorPoint = new GTBpoint(upperLeftX, upperLeftY);
             returnRaster.leftXCoordinate = upperLeftX;
@@ -166,6 +168,12 @@ namespace GeoTBelt.GeoTiff
             }
 
             returnRaster.PlanarConfiguration = 1;
+
+            returnRaster.Grid = 
+                new GridInstance(numberOfColumns, numberOfRows);
+
+            returnRaster.DataFrame = 
+                new T[numberOfRows * numberOfColumns * bandCount];
 
             return returnRaster;
         }

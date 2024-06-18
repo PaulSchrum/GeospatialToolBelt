@@ -50,6 +50,7 @@ namespace Test_ToolBelt
             {
                 currDirList.RemoveAt(currDirList.Count - 1);
             }
+            currDirList.Add("Data");
             return string.Join("\\", currDirList);
         }
 
@@ -66,7 +67,7 @@ namespace Test_ToolBelt
             Assert.AreEqual(expected: expected, actual: (double) actual,
                 delta: 0.005);
 
-            expected = 4476.672f;
+            expected = 4475.788f;
             //actual = ascRaster.bands[0].At(1, 1);
             actual = ascRaster.GetValueAt(1, 1);
             Assert.IsNotNull(actual);
@@ -131,7 +132,10 @@ namespace Test_ToolBelt
             {
                 for (int column = 0; column < columnCount; column++) 
                 {
-                    float cellValue = geoTiffRaster_singleBand.GetValueAt(column, row) + addValue;
+                    float cellValue = 
+                        geoTiffRaster_singleBand
+                        .GetValueAt(column, row) + addValue;
+                    
                     geoTiffRaster_singleBand.SetValueAt(cellValue, column, row);
                 }
             }

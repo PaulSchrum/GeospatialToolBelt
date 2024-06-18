@@ -26,6 +26,7 @@ namespace Test_ToolBelt
                 {
                     currDirList.RemoveAt(currDirList.Count - 1);
                 }
+                currDirList.Add("Data");
                 return string.Join("\\", currDirList);
             }
             currentDirectory = improvedGetCurrentDirectory("Test_ToolBelt");
@@ -87,10 +88,21 @@ namespace Test_ToolBelt
                     IOutputRaster<float> map = 
                     RasterFactory.CreateRaster<float>(fullPath, dims))
                 {
+                    var vv = ((LandisRaster<float>)map).theRaster;
                     for (int idx = 0; idx < totalCellCount; idx++)
                     {
                         float randomFloat = (float)random.NextDouble();
+                        randomFloat *= 1000f;
+                        int anInt = (int)randomFloat;
+                        randomFloat = (float)anInt;
                         map.BufferPixel = randomFloat;
+
+                        //int row = idx / dims.Columns;
+                        //float newValue = 1000f * row;
+                        //int col = idx % dims.Columns;
+                        //newValue += col;
+                        //map.BufferPixel = newValue;
+
                         map.WriteBufferPixel();
                     }
                 }

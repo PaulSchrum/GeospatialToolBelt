@@ -804,13 +804,15 @@ namespace GeoTBelt.GeoTiff
                 #region writeRasterData
 
                 byte[] cellBuffer = new byte[typeSizeInBytes];
-                byte[] stripBuffer = new byte[width * typeSizeInBytes];
+                int band = 0;
 
                 for(int row=0; row < height; row++)
                 {
-                    for(int column=0; column < width; column++)
+                    byte[] stripBuffer = new byte[width * typeSizeInBytes];
+                    int stopHere = 99;
+                    for (int column=0; column < width; column++)
                     {
-                        T[] cellValue = new T[] { tiff.GetValueAt(column, row) };
+                        T[] cellValue = new T[] { tiff.GetValueAt(column, row, band) };
 
                         Buffer.BlockCopy(cellValue, 0, 
                             cellBuffer, 0, typeSizeInBytes);

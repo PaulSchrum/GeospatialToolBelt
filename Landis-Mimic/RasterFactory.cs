@@ -31,7 +31,9 @@ namespace Landis_Mimic
                 GeoTiffRaster<T>.MakeNew(path,
                 dimensions.Rows, dimensions.Columns);
 
+            var v = returnRaster.theRaster;
 
+            returnRaster.Dimensions = dimensions;
             return returnRaster;
         }
     }
