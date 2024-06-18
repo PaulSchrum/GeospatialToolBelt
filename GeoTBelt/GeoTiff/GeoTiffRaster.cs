@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.Design;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -62,6 +63,111 @@ namespace GeoTBelt.GeoTiff
         public void SaveAs(string outFileName)
         {
             GeoTiffHelper.WriteGeoTiff(this, outFileName);
+        }
+
+        /// <summary>
+        /// Makes a new GeoTiff raster from nothing.
+        /// Units of "cellSize" and the "upperLeft" variables are
+        /// not proscribed. Thus the units, whether meters, feet, or
+        /// degrees, will be determned in other software for now.
+        /// </summary>
+        /// <param name="path">Path and filename of the </param>
+        /// <param name="numberOfRows">Row count for the raster</param>
+        /// <param name="numberOfColumns">column count for raster</param>
+        /// <param name="cellSize">Cell size in x and y</param>
+        /// <param name="upperLeftX">X-coordinate of anchor point</param>
+        /// <param name="upperLeftY">Y-coordinates of anchor point</param>
+        /// <param name="bandCount">Number of bands to create. Currently 
+        /// forced to be 1.</param>
+        /// <returns>GeoTiffRaster of type T, where T is the pixel type
+        /// and may be any basic type of the following: byte, sbyte, short,
+        /// ushort, int, uint, long, ulong, float, or double.</returns>
+        /// <exception cref="InvalidOperationException"></exception>
+        public static GeoTiffRaster<T> MakeNew
+            (string path, int numberOfRows, int numberOfColumns,
+            double cellSize = 1d, 
+            double upperLeftX = 0d, double upperLeftY = 0d,
+            int bandCount = 1)
+        {
+            var returnRaster = new GeoTiffRaster<T>();
+
+            returnRaster.fileName = path;
+            returnRaster.numColumns = numberOfColumns;
+            returnRaster.numRows = numberOfRows;
+            returnRaster.NoDataValueString = "-9999";
+            returnRaster.cellSize = cellSize;
+
+            returnRaster.anchorPoint = new GTBpoint(upperLeftX, upperLeftY);
+            returnRaster.leftXCoordinate = upperLeftX;
+            returnRaster.topYCoordinate = upperLeftY;
+
+            returnRaster.rightXCoordinate = upperLeftX +
+                returnRaster.cellSizeX * returnRaster.numColumns;
+            returnRaster.bottomYCoordinate = upperLeftY -
+                returnRaster.cellSizeY * returnRaster.numRows;
+
+            Type myPixelType = typeof (T);
+            returnRaster.SampleFormat = myPixelType switch
+            {
+                Type _ when typeof(T) == typeof(byte) => SF_UnsignedInteger,
+                Type _ when typeof(T) == typeof(sbyte) => SF_SignedInteger,
+                Type _ when typeof(T) == typeof(short) => SF_SignedInteger,
+                Type _ when typeof(T) == typeof(ushort) => SF_UnsignedInteger,
+                Type _ when typeof(T) == typeof(int) => SF_SignedInteger,
+                Type _ when typeof(T) == typeof(uint) => SF_UnsignedInteger,
+                Type _ when typeof(T) == typeof(long) => SF_SignedInteger,
+                Type _ when typeof(T) == typeof(ulong) => SF_UnsignedInteger,
+                Type _ when typeof(T) == typeof(float) => SF_IEEEFP,
+                Type _ when typeof(T) == typeof(double) => SF_IEEEFP,
+                _ => SF_Undefined
+            };
+
+            returnRaster.SamplesPerPixel = 1;
+
+            returnRaster.BitsPerSample = myPixelType switch
+            {
+                Type _ when typeof(T) == typeof(byte) => sizeof(byte),
+                Type _ when typeof(T) == typeof(sbyte) => sizeof(sbyte),
+                Type _ when typeof(T) == typeof(short) => sizeof(short),
+                Type _ when typeof(T) == typeof(ushort) => sizeof(ushort),
+                Type _ when typeof(T) == typeof(int) => sizeof(int),
+                Type _ when typeof(T) == typeof(uint) => sizeof(uint),
+                Type _ when typeof(T) == typeof(long) => sizeof(long),
+                Type _ when typeof(T) == typeof(ulong) => sizeof(ulong),
+                Type _ when typeof(T) == typeof(float) => sizeof(float),
+                Type _ when typeof(T) == typeof(double) => sizeof(double),
+                _ => throw new InvalidOperationException("Unsupported pixel type")
+            } * 8;
+
+            returnRaster.CellDataType = typeof(T);
+
+            returnRaster.Compression = 1; // uncompressed
+
+            returnRaster.PhotometricInterpretation = 1; // always
+
+            returnRaster.RowsPerStrip = 1;
+            var bitsPerCell = (long) (returnRaster.BitsPerSample *
+                returnRaster.SamplesPerPixel);
+            var bytesPerCell = bitsPerCell / 8;
+            var bytesPerRow = bytesPerCell * numberOfColumns;
+            var bytesPerStrip = bytesPerRow * returnRaster.RowsPerStrip;
+
+            var numberOfStrips = 
+                (int) (numberOfRows / returnRaster.RowsPerStrip);
+
+            returnRaster.StripByteCounts = new long[numberOfStrips];
+            returnRaster.StripOffsets = new long[numberOfStrips];
+            long offsetAccumulator = 0;
+            for ( int i = 0; i < numberOfStrips; i++ )
+            {
+                returnRaster.StripByteCounts[i] = (long) bytesPerStrip;
+                returnRaster.StripOffsets[i] = offsetAccumulator;
+                offsetAccumulator += (long)bytesPerStrip;
+            }
+
+            returnRaster.PlanarConfiguration = 1;
+
+            return returnRaster;
         }
     }
 }

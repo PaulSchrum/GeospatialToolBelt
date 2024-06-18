@@ -21,5 +21,18 @@ namespace Landis_Mimic
 
             return (IInputRaster<T>) workingRaster;
         }
+
+        public static IOutputRaster<T> CreateRaster<T>
+            (string path, Dimensions dimensions)
+            where T : struct
+        {
+            LandisRaster<T> returnRaster = new LandisRaster<T>();
+            returnRaster.theRaster =
+                GeoTiffRaster<T>.MakeNew(path,
+                dimensions.Rows, dimensions.Columns);
+
+
+            return returnRaster;
+        }
     }
 }

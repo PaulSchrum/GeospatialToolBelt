@@ -11,6 +11,8 @@ namespace GeoTBelt
     public class Raster<T> : GeoTBelt.IRaster<T>
         where T : struct
     {
+        public string fileName { get; set; }
+
         public double cellSize
         {
             get
@@ -123,6 +125,7 @@ namespace GeoTBelt
                     ("Could not determine file type from path or format parameter.");
             }
 
+            returnRaster.fileName = fullPath;
             return returnRaster;
         }
 
@@ -147,6 +150,10 @@ namespace GeoTBelt
 
         public void SetValueAt(T value, int linearOffset, int band = 0)
         {
+            if(DataFrame is null)
+            {
+                DataFrame = new T[numRows * numColumns];
+            }
             DataFrame[linearOffset] = value;
         }
 

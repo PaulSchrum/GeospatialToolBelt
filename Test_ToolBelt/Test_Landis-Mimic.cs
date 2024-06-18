@@ -69,5 +69,40 @@ namespace Test_ToolBelt
                 Assert.AreEqual(expected: 5042.647, actual: actualValue, delta: 0.01);
             }
         }
+
+        [TestMethod]
+        public void WriteGeoTiff_IterateOverCells()
+        {
+            bool suppressDelete = true; // true = don't delete the new tiff.
+            string filename = "WriteGeoTiff_IterateOverCells.tiff";
+            string fullPath = Path.Combine(currentDirectory, filename);
+
+            Dimensions dims = new Dimensions(800, 800);
+            int totalCellCount = dims.Rows * dims.Columns;
+            Random random = new Random(78);
+
+            try
+            {
+                using (
+                    IOutputRaster<float> map = 
+                    RasterFactory.CreateRaster<float>(fullPath, dims))
+                {
+                    for (int idx = 0; idx < totalCellCount; idx++)
+                    {
+                        float randomFloat = (float)random.NextDouble();
+                        map.BufferPixel = randomFloat;
+                        map.WriteBufferPixel();
+                    }
+                }
+            }
+            finally
+            {
+                if (!suppressDelete)
+                    if(File.Exists(fullPath))
+                        File.Delete(fullPath);
+            }
+
+        }
     }
 }
+
