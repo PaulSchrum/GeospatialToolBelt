@@ -376,3 +376,6 @@ FodyWeavers.xsd
 /Test_ToolBelt/OutputTest1 - Copy.tiff.aux.xml
 /Test_ToolBelt/Data/WriteGeoTiff_IterateOverCells - Copy (2).tiff
 /Test_ToolBelt/Data/WriteGeoTiff_IterateOverCells.tiff
+/Test_ToolBelt/Data/TestData_00765413_uncompressed old.tif
+/Test_ToolBelt/Data/TestData_00765413_uncompressed.tif.aux.xml
+/Test_ToolBelt/Data/TestData_00765413_uncompressed - Copy.tif
