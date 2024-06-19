@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using GeoTBelt;
 using GeoTBelt.GeoTiff;
 using Landis_Mimic;
 
@@ -74,7 +75,7 @@ namespace Test_ToolBelt
         [TestMethod]
         public void WriteGeoTiff_IterateOverCells()
         {
-            bool suppressDelete = true; // true = don't delete the new tiff.
+            bool suppressDelete = false; // true = don't delete the new tiff.
             string filename = "WriteGeoTiff_IterateOverCells.tiff";
             string fullPath = Path.Combine(currentDirectory, filename);
 
@@ -106,6 +107,21 @@ namespace Test_ToolBelt
                         map.WriteBufferPixel();
                     }
                 }
+
+                // Read as a new object. Test values at row 2, column 5,
+                // and at row 798, column 400
+
+                var inputRaster = Raster<float>.Load(fullPath);
+                int row = 2; int col = 5;
+                float expected = 932f;
+                float actual = inputRaster.GetValueAt(row, col, band: 1);
+                Assert.AreEqual(expected, actual, delta: 0.01);
+
+                row = 798; col = 797;
+                expected = 576f;
+                actual = inputRaster.GetValueAt(row, col, band: 1);
+                Assert.AreEqual(expected, actual, delta: 0.01);
+
             }
             finally
             {
