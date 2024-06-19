@@ -812,7 +812,8 @@ namespace GeoTBelt.GeoTiff
                     int stopHere = 99;
                     for (int column=0; column < width; column++)
                     {
-                        T[] cellValue = new T[] { tiff.GetValueAt(column, row, band) };
+                        stopHere = 97;
+                        T[] cellValue = new T[] { tiff.GetValueAt(row, column, band) };
 
                         Buffer.BlockCopy(cellValue, 0, 
                             cellBuffer, 0, typeSizeInBytes);

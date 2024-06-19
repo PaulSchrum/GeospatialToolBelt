@@ -119,7 +119,7 @@ namespace GeoTBelt.Grid
             return r.row * this.rasterColumns + r.column;
         }
 
-        public int AsArrayIndex(int column, int row)
+        public int AsArrayIndex(int row, int column)
         {
             return AsArrayIndex(new RasterCoordinates(column, row));
         }

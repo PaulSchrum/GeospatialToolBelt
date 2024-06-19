@@ -129,13 +129,13 @@ namespace GeoTBelt
             return returnRaster;
         }
 
-        public T GetValueAt(int row, int column, int band=0)
+        public T GetValueAt(int row, int column, int band=1)
         { 
             int linearIndex = this.Grid.AsArrayIndex(row, column);
             return DataFrame[linearIndex];
         }
 
-        public T GetValueAt(int linearIndex, int band = 0)
+        public T GetValueAt(int linearIndex)
         {
             return DataFrame[linearIndex];
         }
