@@ -379,3 +379,6 @@ FodyWeavers.xsd
 /Test_ToolBelt/Data/TestData_00765413_uncompressed old.tif
 /Test_ToolBelt/Data/TestData_00765413_uncompressed.tif.aux.xml
 /Test_ToolBelt/Data/TestData_00765413_uncompressed - Copy.tif
+/Test_ToolBelt/Data/OutputTest1.tiff
+/Test_ToolBelt/Data/TestData_00765413_out.asc
+/Test_ToolBelt/Data/WriteGeoTiff_IterateOverCells.tiff.aux.xml
