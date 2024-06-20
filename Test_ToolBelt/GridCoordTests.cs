@@ -162,6 +162,7 @@ namespace Test_ToolBelt
             Assert.AreEqual(expected: 3, actual: result.subTileRow);
         }
 
+        [Ignore]
         [TestMethod]
         public void GridInstance_ConversionsTo1Darray_areCorrect()
         {

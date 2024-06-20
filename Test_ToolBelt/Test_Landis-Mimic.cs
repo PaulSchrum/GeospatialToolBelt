@@ -75,7 +75,7 @@ namespace Test_ToolBelt
         [TestMethod]
         public void WriteGeoTiff_IterateOverCells()
         {
-            bool suppressDelete = false; // true = don't delete the new tiff.
+            bool suppressDelete = true; // true = don't delete the new tiff.
             string filename = "WriteGeoTiff_IterateOverCells.tiff";
             string fullPath = Path.Combine(currentDirectory, filename);
 
@@ -89,7 +89,6 @@ namespace Test_ToolBelt
                     IOutputRaster<float> map = 
                     RasterFactory.CreateRaster<float>(fullPath, dims))
                 {
-                    var vv = ((LandisRaster<float>)map).theRaster;
                     for (int idx = 0; idx < totalCellCount; idx++)
                     {
                         float randomFloat = (float)random.NextDouble();
@@ -97,15 +96,17 @@ namespace Test_ToolBelt
                         int anInt = (int)randomFloat;
                         randomFloat = (float)anInt;
                         map.BufferPixel = randomFloat;
+                        map.WriteBufferPixel();
 
                         //int row = idx / dims.Columns;
                         //float newValue = 1000f * row;
                         //int col = idx % dims.Columns;
                         //newValue += col;
                         //map.BufferPixel = newValue;
+                        //map.WriteBufferPixel();
 
-                        map.WriteBufferPixel();
                     }
+                    map.SaveAs(fullPath);
                 }
 
                 // Read as a new object. Test values at row 2, column 5,
@@ -114,12 +115,12 @@ namespace Test_ToolBelt
                 var inputRaster = Raster<float>.Load(fullPath);
                 int row = 2; int col = 5;
                 float expected = 932f;
-                float actual = inputRaster.GetValueAt(row, col, band: 1);
+                float actual = inputRaster.GetValueAtRowColumn(row, col, band: 1);
                 Assert.AreEqual(expected, actual, delta: 0.01);
 
                 row = 798; col = 797;
                 expected = 576f;
-                actual = inputRaster.GetValueAt(row, col, band: 1);
+                actual = inputRaster.GetValueAtRowColumn(row, col, band: 1);
                 Assert.AreEqual(expected, actual, delta: 0.01);
 
             }

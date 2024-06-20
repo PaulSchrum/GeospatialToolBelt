@@ -8,9 +8,9 @@ namespace GeoTBelt
 {
     public interface IRaster<T> where T : struct
     {
-        public T GetValueAt(int row, int column, int band = 0);
+        public T GetValueAtRowColumn(int row, int column, int band = 0);
         public T GetValueAt(int offset);
-        public void SetValueAt(T value, int row, int column, int band = 0);
-        public void SetValueAt(T value, int offset, int band = 0);
+        public void SetValueAtRowColumn(T value, int row, int column, int band = 0);
+        public void SetValueAtLinearIndex(T value, int offset, int band = 0);
     }
 }

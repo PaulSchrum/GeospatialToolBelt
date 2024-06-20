@@ -129,7 +129,7 @@ namespace GeoTBelt
             return returnRaster;
         }
 
-        public T GetValueAt(int row, int column, int band=1)
+        public T GetValueAtRowColumn(int row, int column, int band=1)
         { 
             int linearIndex = this.Grid.AsArrayIndex(row, column);
             return DataFrame[linearIndex];
@@ -141,14 +141,14 @@ namespace GeoTBelt
         }
 
 
-        public void SetValueAt(T value, 
+        public void SetValueAtRowColumn(T value, 
             int row, int column, int band=0)
         {
             int linearIndex = this.Grid.AsArrayIndex(row, column);
             DataFrame[linearIndex] = value;
         }
 
-        public void SetValueAt(T value, int linearOffset, int band = 0)
+        public void SetValueAtLinearIndex(T value, int linearOffset, int band = 0)
         {
             if(DataFrame is null)
             {
@@ -287,7 +287,7 @@ namespace GeoTBelt
                 {
                     for (int currentColumn = 0; currentColumn < numColumns; currentColumn++)
                     {
-                        T value = this.GetValueAt(currentRow, currentColumn);
+                        T value = this.GetValueAtRowColumn(currentRow, currentColumn);
                         if (EqualityComparer<T>.Default.Equals(value, NoDataValue))
                         {
                             writer.Write(NoDataValue + " ");
@@ -369,6 +369,7 @@ namespace GeoTBelt
             CellCount = numColumns * numRows * BandCount;
             DataFrame = new T[CellCount];
         }
+
     }
 
 }

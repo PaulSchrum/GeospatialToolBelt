@@ -13,5 +13,7 @@ namespace Landis_Mimic
         void WriteBufferPixel();
 
         Dimensions Dimensions { get; set; }
+
+        public void SaveAs(string fileName);
     }
 }

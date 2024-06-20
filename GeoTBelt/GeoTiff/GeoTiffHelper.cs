@@ -738,6 +738,19 @@ namespace GeoTBelt.GeoTiff
 
                 tiff.MergeFieldInfo(tiffFieldInfo, tiffFieldInfo.Length);
             }
+            if(File.Exists(fileToCreate))
+            {
+                FileInfo fi = new FileInfo(fileToCreate);
+                if(fi.IsReadOnly == true)
+                {
+                    string fName = Path.GetFileName(fi.FullName);
+                    throw new IOException(
+                        $"File {fName} is read only and can't be written to." + 
+                        $"{fileToCreate}"
+                        );
+                }
+            }
+
 
             Tiff.SetTagExtender(TagExtender);
 
@@ -813,7 +826,8 @@ namespace GeoTBelt.GeoTiff
                     for (int column=0; column < width; column++)
                     {
                         stopHere = 97;
-                        T[] cellValue = new T[] { tiff.GetValueAt(row, column, band) };
+                        T[] cellValue = 
+                            new T[] { tiff.GetValueAtRowColumn(row, column, band) };
 
                         Buffer.BlockCopy(cellValue, 0, 
                             cellBuffer, 0, typeSizeInBytes);

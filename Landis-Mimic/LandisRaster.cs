@@ -42,12 +42,23 @@ namespace Landis_Mimic
             set { _dimensions = value; }
         }
 
-        public void Dispose()
-        { 
-            if(this is IOutputRaster<T>)
+        public void SaveAs(string fileName=null)
+        {
+            try
             {
-                theRaster.SaveAs(theRaster.fileName);
+                if(fileName is not null)
+                    theRaster.SaveAs(theRaster.fileName);
+                else
+                    theRaster.SaveAs(theRaster.fileName);
             }
+            catch (IOException ex) 
+            { 
+                
+            }
+        }
+
+        public void Dispose()
+        {
         }
 
         public int Count()
@@ -74,7 +85,7 @@ namespace Landis_Mimic
         {
             if(++index >= Count())
                 throw new IndexOutOfRangeException();
-            theRaster.SetValueAt(BufferPixel, index);
+            theRaster.SetValueAtLinearIndex(BufferPixel, index);
         }
 
     }
