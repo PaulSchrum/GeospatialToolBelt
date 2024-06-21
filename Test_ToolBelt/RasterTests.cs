@@ -186,6 +186,8 @@ namespace Test_ToolBelt
                 expected: 642_500f,
                 actual: geoTiffOut.bottomYCoordinate,
                 delta: 0.005);
+
+            geoTiffRaster_singleBand = null;
         }
 
         [TestMethod]
