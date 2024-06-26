@@ -75,7 +75,7 @@ namespace Test_ToolBelt
         [TestMethod]
         public void WriteGeoTiff_IterateOverCells()
         {
-            bool suppressDelete = true; // true = don't delete the new tiff.
+            bool suppressDelete = false; // true = don't delete the new tiff.
             string filename = "WriteGeoTiff_IterateOverCells.tiff";
             string fullPath = Path.Combine(currentDirectory, filename);
 
