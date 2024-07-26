@@ -1,9 +1,13 @@
 ﻿using BitMiracle.LibTiff.Classic;
 using GeoTBelt.GeoTiff;
 using GeoTBelt.Grid;
+using System;
 using System.Collections;
-using System.ComponentModel.DataAnnotations.Schema;
+using System.Collections.Generic;
+
+//using System.ComponentModel.DataAnnotations.Schema;
 using System.Globalization;
+using System.IO;
 //using static System.Net.Mime.MediaTypeNames;
 
 namespace GeoTBelt
@@ -165,7 +169,7 @@ namespace GeoTBelt
                 int rowCount = 0;
                 while (rowCount < 6)
                 {
-                    var lineArray = sr.ReadLine().Split(' ', StringSplitOptions.RemoveEmptyEntries);
+                    var lineArray = sr.ReadLine().Split(' '); //, StringSplitOptions.RemoveEmptyEntries);
                     switch (lineArray[0])
                     {
                         case "ncols":
@@ -225,7 +229,7 @@ namespace GeoTBelt
                 {
                     line = sr.ReadLine();
                     if (line == null) break;
-                    var lineList = line.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+                    var lineList = line.Split(' '); //, StringSplitOptions.RemoveEmptyEntries);
                     rowCounter++;
                     int columnCounter = -1;
 

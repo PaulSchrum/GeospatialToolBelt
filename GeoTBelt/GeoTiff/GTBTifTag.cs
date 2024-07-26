@@ -1,4 +1,6 @@
 ﻿using BitMiracle.LibTiff.Classic;
+using System;
+using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Text;
 
@@ -6,10 +8,10 @@ namespace GeoTBelt.GeoTiff
 {
     internal record GTBTifTag
     {
-        public TiffTag TagId { get; init; }
-        public string TagName { get; init; }
-        public dynamic value { get; init; }
-        public Type valuesType { get; init; }
+        public TiffTag TagId { get; set; }
+        public string TagName { get; set; }
+        public dynamic value { get; set; }
+        public Type valuesType { get; set; }
 
         public override string ToString()
         {

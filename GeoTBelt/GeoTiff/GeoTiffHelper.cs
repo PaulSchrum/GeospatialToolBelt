@@ -1,8 +1,14 @@
 ﻿using BitMiracle.LibTiff.Classic;
 using GeoTBelt.Grid;
-using System.ComponentModel;
-using System.ComponentModel.DataAnnotations;
-using System.Runtime.CompilerServices;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Runtime.InteropServices;
+
+
+//using System.ComponentModel;
+//using System.ComponentModel.DataAnnotations;
+//using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
 using static System.Net.Mime.MediaTypeNames;
@@ -88,8 +94,9 @@ namespace GeoTBelt.GeoTiff
                 returnRaster = new GeoTiffRaster<T>();
 
                 #region raster base class items
-                int width = tags["ImageWidth"];
-                returnRaster.numColumns = width;
+                dynamic widthDynamic = tags["ImageWidth"];
+                returnRaster.numColumns = (Int32) (widthDynamic);
+                int width = returnRaster.numColumns;
 
                 int height = tags["ImageLength"];
                 returnRaster.numRows = height;
@@ -275,11 +282,17 @@ namespace GeoTBelt.GeoTiff
         public static T ConvertFromByteArrayTo<T>(byte[] buffer, int startIndex) 
             where T : struct
         {
-            var theSize = Marshal.SizeOf(typeof(T));
-            ReadOnlySpan<byte> span = 
-                new ReadOnlySpan<byte>(buffer, startIndex, Marshal.SizeOf<T>());
+
+            var theSize = Marshal.SizeOf<T>();
+            ReadOnlySpan<byte> span = new ReadOnlySpan<byte>(buffer, startIndex, theSize);
 
             return MemoryMarshal.Read<T>(span);
+
+            //var theSize = Marshal.SizeOf(typeof(T));
+            //ReadOnlySpan<byte> span = 
+            //    new ReadOnlySpan<byte>(buffer, startIndex, Marshal.SizeOf<T>());
+
+            //return MemoryMarshal.Read<T>(span);
         }
 
 
