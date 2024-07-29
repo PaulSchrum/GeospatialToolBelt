@@ -1,6 +1,9 @@
 using GeoTBelt;
 using GeoTBelt.GeoTiff;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System;
 using System.Data.Common;
+using System.IO;
 using System.Linq;
 
 namespace Test_ToolBelt
@@ -33,7 +36,7 @@ namespace Test_ToolBelt
                 ascTestFileName = "TestData_00765413.asc";
                 ascOutputTestFile = "TestData_00765413_out.asc";
                 ascOutputTestFileFullPath = Path.Combine(currentDirectory, ascOutputTestFile);
-                var pathAsList = currentDirectory.Split("\\").ToList();
+                var pathAsList = currentDirectory.Split('\\').ToList();
                 pathAsList = pathAsList.Take(pathAsList.Count - 3).ToList();
                 //currentDirectory = string.Join("\\", pathAsList);
                 ascTestFileFullPath = Path.Combine(currentDirectory, ascTestFileName);
@@ -45,7 +48,7 @@ namespace Test_ToolBelt
 
         private static string improvedGetCurrentDirectory(string desiredDirectory)
         {
-            var currDirList = Directory.GetCurrentDirectory().Split("\\").ToList();
+            var currDirList = Directory.GetCurrentDirectory().Split('\\').ToList();
             while (currDirList.Last() != desiredDirectory)
             {
                 currDirList.RemoveAt(currDirList.Count - 1);

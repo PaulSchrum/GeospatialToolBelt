@@ -8,6 +8,7 @@ using System.Collections.Generic;
 //using System.ComponentModel.DataAnnotations.Schema;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 //using static System.Net.Mime.MediaTypeNames;
 
 namespace GeoTBelt
@@ -170,6 +171,8 @@ namespace GeoTBelt
                 while (rowCount < 6)
                 {
                     var lineArray = sr.ReadLine().Split(' '); //, StringSplitOptions.RemoveEmptyEntries);
+                    lineArray = lineArray.Where(item => item != null)
+                        .Where(str => str.Length > 0).ToArray();
                     switch (lineArray[0])
                     {
                         case "ncols":
@@ -230,13 +233,19 @@ namespace GeoTBelt
                     line = sr.ReadLine();
                     if (line == null) break;
                     var lineList = line.Split(' '); //, StringSplitOptions.RemoveEmptyEntries);
+                    lineList = lineList.Where(item => item != null)
+                        .Where(str => str.Length > 0).ToArray();
+
                     rowCounter++;
                     int columnCounter = -1;
 
                     foreach (var entry in lineList)
                     {
                         columnCounter++;
-                        DataFrame[Grid.AsArrayIndex(columnCounter, rowCounter)] =
+                        int idx;
+                        idx = Grid.AsArrayIndex(columnCounter, rowCounter);
+                        if (idx > DataFrame.Length) break;
+                        DataFrame[idx] =
                             ParseStringToNumber(entry);
                     }
                 }

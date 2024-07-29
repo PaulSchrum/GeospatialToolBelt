@@ -114,7 +114,8 @@ namespace GeoTBelt.Grid
             if (rasterCoordinates == null) return -1;
             var r = rasterCoordinates;  // aliasing for convenience
             if(r.column >= this.rasterColumns) throw new IndexOutOfRangeException();
-            if(r.row >= this.rasterRows) throw new IndexOutOfRangeException();
+            if(r.row >= this.rasterRows) 
+                throw new IndexOutOfRangeException();
 
             return r.row * this.rasterColumns + r.column;
         }

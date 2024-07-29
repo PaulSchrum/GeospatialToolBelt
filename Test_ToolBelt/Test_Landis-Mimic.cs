@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -22,7 +23,7 @@ namespace Test_ToolBelt
         {
             static string improvedGetCurrentDirectory(string desiredDirectory)
             {
-                var currDirList = Directory.GetCurrentDirectory().Split("\\").ToList();
+                var currDirList = Directory.GetCurrentDirectory().Split('\\').ToList();
                 while (currDirList.Last() != desiredDirectory)
                 {
                     currDirList.RemoveAt(currDirList.Count - 1);
