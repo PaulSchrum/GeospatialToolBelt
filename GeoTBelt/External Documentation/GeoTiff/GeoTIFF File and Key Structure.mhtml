@@ -1,0 +1,463 @@
+From: <Saved by Blink>
+Snapshot-Content-Location: http://geotiff.maptools.org/spec/geotiff2.4.html
+Subject: 
+Date: Tue, 13 Aug 2024 14:23:58 -0400
+MIME-Version: 1.0
+Content-Type: multipart/related;
+	type="text/html";
+	boundary="----MultipartBoundary--sKXEcwbjUaU9RjDBgqxdjay6nTdp8dg6NCQJIkEg4u----"
+
+
+------MultipartBoundary--sKXEcwbjUaU9RjDBgqxdjay6nTdp8dg6NCQJIkEg4u----
+Content-Type: text/html
+Content-ID: <frame-EAA02F7DF6F4140442B5152C0FF2345E@mhtml.blink>
+Content-Transfer-Encoding: quoted-printable
+Content-Location: http://geotiff.maptools.org/spec/geotiff2.4.html
+
+<html><head><meta http-equiv=3D"Content-Type" content=3D"text/html; charset=
+=3Dwindows-1252"></head><body><h2><!-- Geotiff converted by Niles --><tt> <=
+/tt> <a href=3D"http://geotiff.maptools.org/spec/geotiffhome.html"><img src=
+=3D"http://geotiff.maptools.org/spec/gifs/geotiff.gif" alt=3D"GeoTIFF Web P=
+age"></a> <a href=3D"http://geotiff.maptools.org/spec/contents.html"><img s=
+rc=3D"http://geotiff.maptools.org/spec/gifs/table.gif" alt=3D"Table of Cont=
+ents"></a> <a href=3D"http://geotiff.maptools.org/spec/geotiff2.html"><img =
+src=3D"http://geotiff.maptools.org/spec/gifs/sec2.gif" alt=3D"Top of Sectio=
+n 2"></a></h2>
+<img src=3D"http://geotiff.maptools.org/spec/gifs/clrbar_half.gif">
+ <h3><a name=3D"2.4">2.4 GeoTIFF File and "Key" Structure</a></h3>
+<tt><p>
+This section describes the abstract file-format and "GeoKey" data storage
+mechanism used in GeoTIFF. Uses of this mechanism for implementing
+georeferencing and geocoding is detailed in  <a href=3D"http://geotiff.mapt=
+ools.org/spec/geotiff2.6.html#2.6">section 2.6</a> and  <a href=3D"http://g=
+eotiff.maptools.org/spec/geotiff2.7.html#2.7">section 2.7</a> .</p><p>
+</p><p>
+A GeoTIFF file is a TIFF 6.0 file, and inherits the file structure as descr=
+ibed
+in the corresponding portion of the TIFF spec. All GeoTIFF specific informa=
+tion
+is encoded in several additional reserved TIFF tags, and contains no privat=
+e
+Image File Directories (IFD's), binary structures or other private informat=
+ion
+invisible to standard TIFF readers.</p><p>
+ </p><p>
+The number and type of parameters that would be required to describe most
+popular projection types would, if implemented as separate TIFF tags, likel=
+y
+require dozens or even hundred of tags, exhausting the limited resources of=
+ the
+TIFF tag-space. On the other hand, a private IFD, while providing thousands=
+ of
+free tags, is limited in that its tag-values are invisible to non-savvy TIF=
+F
+readers (which don't know that the IFD_OFFSET tag value points to a private
+IFD).</p><p>
+</p><p>
+To avoid these problems, a GeoTIFF file stores projection parameters in a s=
+et
+of "Keys" which are virtually identical in function to a "Tag", but has one
+more level of abstraction above TIFF. Effectively, it is a sort of "Meta-Ta=
+g".
+A Key works with formatted tag-values of a TIFF file the way that a TIFF fi=
+le
+deals with the raw bytes of a data file. Like a tag, a Key has an ID number
+ranging from 0 to 65535, but unlike TIFF tags, all key ID's are available f=
+or
+use in GeoTIFF parameter definitions.</p><p>
+</p></tt><p><tt>
+The Keys in GeoTIFF (also call "GeoKeys") are all referenced from the
+GeoKeyDirectoryTag, which defined as follows: </tt>
+</p><pre>GeoKeyDirectoryTag:
+      Tag =3D 34735 (87AF.H)=20
+      Type =3D SHORT (2-byte unsigned short)
+      N =3D variable, &gt;=3D 4
+      Alias: ProjectionInfoTag, CoordSystemInfoTag
+      Owner: SPOT Image, Inc.</pre><tt><p>
+This tag may be used to store the GeoKey Directory, which defines and
+references the "GeoKeys", as described below. </p><p>
+</p><p>
+The tag is an array of unsigned SHORT values, which are primarily grouped i=
+nto
+blocks of 4. The first 4 values are special, and contain GeoKey directory
+header information. The header values consist of the following information,=
+ in
+order:</p></tt><p><tt>
+</tt>
+</p><pre>  Header=3D{KeyDirectoryVersion, KeyRevision, MinorRevision, Numbe=
+rOfKeys}
+  where=20
+     "KeyDirectoryVersion" indicates the current version of Key
+     implementation, and will only change if this Tag's Key=20
+     structure is changed. (Similar to the TIFFVersion (42)).
+     The current DirectoryVersion number is 1. This value will
+     most likely never change, and may be used to ensure that
+     this is a valid Key-implementation.
+  =20
+     "KeyRevision" indicates what revision of Key-Sets are used.
+     "MinorRevision" indicates what set of Key-codes are used. The
+     complete revision number is denoted &lt;KeyRevision&gt;.&lt;MinorRevis=
+ion&gt;
+         =20
+     "NumberOfKeys" indicates how many Keys are defined by the rest
+     of this Tag.</pre><tt>
+    <p>
+This header is immediately followed by a collection of &lt;NumberOfKeys&gt;
+KeyEntry sets, each of which is also 4-SHORTS long. Each KeyEntry is modele=
+d on
+the "TIFFEntry" format of the TIFF directory header, and is of the form:</p=
+></tt><p><tt>
+</tt>
+</p><pre>   KeyEntry =3D { KeyID, TIFFTagLocation, Count, Value_Offset }
+   where=20
+     "KeyID" gives the key-ID value of the Key (identical in function
+     to TIFF tag ID, but completely independent of TIFF tag-space),
+    =20
+     "TIFFTagLocation" indicates which TIFF tag contains the value(s)
+      of the Key: if TIFFTagLocation is 0, then the value is SHORT,
+      and is contained in the "Value_Offset" entry. Otherwise, the type
+      (format) of the value is implied by the TIFF-Type of the tag
+      containing the value.
+ =20
+     "Count" indicates the number of values in this key.
+  =20
+      "Value_Offset" Value_Offset indicates the index-
+      offset *into* the TagArray indicated by TIFFTagLocation, if
+      it is nonzero. If TIFFTagLocation=3D0, then Value_Offset
+      contains the actual (SHORT) value of the Key, and
+      Count=3D1 is implied. Note that the offset is not a byte-offset,
+      but rather an index based on the natural data type of the
+      specified tag array.  </pre><tt><p>
+Following the KeyEntry definitions, the KeyDirectory tag may also contain
+additional values. For example, if a Key requires multiple SHORT values, th=
+ey
+shall be placed at the end of this tag, and the KeyEntry will set
+TIFFTagLocation=3DGeoKeyDirectoryTag, with the Value_Offset pointing to the
+location of the value(s).</p><p>
+</p><p>
+All key-values which are not of type SHORT are to be stored in one of the
+following two tags, based on their format:</p></tt><p><tt>
+</tt>
+</p><pre>GeoDoubleParamsTag:
+      Tag =3D 34736 (87BO.H)=20
+      Type =3D DOUBLE (IEEE Double precision)
+      N =3D variable
+      Owner: SPOT Image, Inc.</pre><tt><p>
+This tag is used to store all of the DOUBLE valued GeoKeys, referenced by t=
+he
+GeoKeyDirectoryTag. The meaning of any value of this double array is determ=
+ined
+from the GeoKeyDirectoryTag reference pointing to it. FLOAT values should f=
+irst
+be converted to DOUBLE and stored here.</p></tt><p><tt>
+</tt>
+</p><pre>GeoAsciiParamsTag:
+      Tag =3D 34737 (87B1.H) =20
+      Type =3D ASCII
+      Owner: SPOT Image, Inc.
+      N =3D variable</pre><tt><p>
+This tag is used to store all of the ASCII valued GeoKeys, referenced by th=
+e
+GeoKeyDirectoryTag. Since keys use offsets into tags, any special comments =
+may
+be placed at the beginning of this tag. For the most part, the only keys th=
+at
+are ASCII valued are "Citation" keys, giving documentation and references f=
+or
+obscure projections, datums, etc.</p></tt><p><tt>
+</tt>
+</p><pre>Note on ASCII Keys:
+</pre><tt>Special
+handling is required for ASCII-valued keys. While it is true that TIFF 6.0
+permits multiple NULL-delimited strings within a single ASCII tag, the
+secondary strings might not appear in the output of naive "tiffdump" progra=
+ms.
+For this reason, the null delimiter of each ASCII Key value shall be conver=
+ted
+to a "|" (pipe) character before being installed back into the ASCII holdin=
+g
+tag, so that a dump of the tag will look like this.</tt><p><tt>
+</tt>
+</p><pre>   AsciiTag=3D"first_value|second_value|etc...last_value|"</pre><t=
+t><p>
+A baseline GeoTIFF-reader must check for and convert the final "|" pipe
+character of a key back into a NULL before returning it to the client softw=
+are.
+</p></tt><p><tt>
+</tt>
+</p><pre>GeoKey Sort Order:
+</pre><tt>In
+the TIFF spec it is required that TIFF tags be written out to the file in
+tag-ID sorted order. This is done to avoid forcing software to perform
+N-squared sort operations when reading and writing tags.<p>
+</p><p>
+To follow the TIFF philosophy, GeoTIFF-writers shall store the GeoKey entri=
+es
+in key-sorted order within the CoordSystemInfoTag.</p></tt><p><tt>
+</tt>
+</p><pre>Example:
+  GeoKeyDirectoryTag=3D(   1,     1, 2,     6,
+                      1024,     0, 1,     2,
+                      1026, 34737,12,     0,
+                      2048,     0, 1, 32767,
+                      2049, 34737,14,    12,
+                      2050,     0, 1,     6,
+                      2051, 34736, 1,     0 )
+  GeoDoubleParamsTag(34736)=3D(1.5)
+  GeoAsciiParamsTag(34737)=3D("Custom File|My Geographic|")</pre><tt><p>
+The first line indicates that this is a Version 1 GeoTIFF GeoKey directory,=
+ the
+keys are Rev. 1.2, and there are 6 Keys defined in this tag.</p><p>
+The next line indicates that the first Key (ID=3D1024 =3D GTModelTypeGeoKey=
+) has
+the value 2 (Geographic), explicitly placed in the entry list (since
+TIFFTagLocation=3D0). The next line indicates that the Key 1026 (the
+GTCitationGeoKey) is listed in the GeoAsciiParamsTag (34737) array, startin=
+g at
+offset 0 (the first in array), and running for 12 bytes and so has the valu=
+e
+"Custom File" (the "|" is converted to a null delimiter at the end). Going
+further down the list, the Key 2051 (GeogLinearUnitSizeGeoKey) is located i=
+n
+the GeoDoubleParamsTag (34736), at offset 0 and has the value 1.5; the valu=
+e of
+key 2049 (GeogCitationGeoKey) is "My Geographic".</p><p>
+</p><p>
+The TIFF layer handles all the problems of data structure, platform
+independence, format types, etc, by specifying byte-offsets, byte-order for=
+mat
+and count, while the Key describes its key values at the TIFF level by
+specifying Tag number, array-index, and count. Since all TIFF information
+occurs in TIFF arrays of some sort, we have a robust method for storing
+anything in a Key that would occur in a Tag.</p><p>
+</p><p>
+With this Key-value approach, there are 65536 Keys which have all the
+flexibility of TIFF tag, with the added advantage that a TIFF dump will pro=
+vide
+all the information that exists in the GeoTIFF implementation.</p><p>
+</p><p>
+This GeoKey mechanism will be used extensively in  <a href=3D"http://geotif=
+f.maptools.org/spec/geotiff2.7.html#2.7">section 2.7</a>, where the
+numerous parameters for defining Coordinate Systems and their underlying
+projections are defined.</p></tt><p><tt>
+ </tt>
+
+</p></body></html>
+------MultipartBoundary--sKXEcwbjUaU9RjDBgqxdjay6nTdp8dg6NCQJIkEg4u----
+Content-Type: image/gif
+Content-Transfer-Encoding: base64
+Content-Location: http://geotiff.maptools.org/spec/gifs/geotiff.gif
+
+R0lGODdhmQArAPcAAP///87Ozr29vaWlpTk5ORgYGM7Gxs7Gvdb3CMbnCL3eEMbnEKXGGK3WGL3n
+GK3WEK3WIZzGGKXOGJS9IZS9GIy1IZzOIZzOGJTGIZTGKXulIYS1IXulKYS1KXutKXOlIYS9KWuc
+KYTGMXOtKWucMXOtMWOUMVqEMWulMVqMKXO1MWulOWutOXO9OVqUMWutQlKEMWu1QlqcOVKMOVKU
+OUp7OVqlQkJ7MVKUQlqtSkJ7OUqUQkKEQjlzOUqcSkKMSjlzQjl7QjF7Qjl7SjFrQkKUWjGESjFj
+QjF7SilrQjGEUiljQilzSjGMWilrSjGEWil7UjGUYzlKQilzUiFaQil7WiFjShhaQhhjSgAYECl7
+YxhrUiFaShhzWiFjUhhjUhhrWgApIRhzYxhSShBKQhBSSghKQgA5MRBaUghjWhh7cwhrY6Wtra29
+vaW9vSljYyFaWiFjYyFraxhaWhBSUhBaWghCQghKSghSUghaWghjYwhrawBjYwBaWgBSUgBKSgBC
+QgA5OQAxMQApKQAhIQAQEAAICABzewBrcwhjawBjawBaYwBSWhhjayGltRBSWghKUghSWgCElABK
+UgBCSlK9ziFaYxhSWhBKUghCSgCctQB7jABzhABrewBjcwA5QgAxOUJrc1K1xkqltSGlvQiUrQCU
+rQCMpQBaawApMWOtvTGtxgCUtQB7lABzjABSYwBKWkKtxghKWgBrhABjewBCUgAhKQhCUqW1vQAQ
+GAAIEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACwAAAAAmQArAAAI/wABCGiD
+y03BgwYTIlyosCHDhw4jQpwosSLFixYzYsTFZgCAjwAOqCK1qqTJkyhTqlzJsqXLlzBjypyp0lGj
+AiBDxjJ1ypTPn0CDCh1KtKjRo0iTKl3KFGhPSaB2Sd0VUtQpToeyat3KtavXr2DDih1LtqzZs1s5
+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
+
+------MultipartBoundary--sKXEcwbjUaU9RjDBgqxdjay6nTdp8dg6NCQJIkEg4u----
+Content-Type: image/gif
+Content-Transfer-Encoding: base64
+Content-Location: http://geotiff.maptools.org/spec/gifs/table.gif
+
+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
+
+------MultipartBoundary--sKXEcwbjUaU9RjDBgqxdjay6nTdp8dg6NCQJIkEg4u----
+Content-Type: image/gif
+Content-Transfer-Encoding: base64
+Content-Location: http://geotiff.maptools.org/spec/gifs/sec2.gif
+
+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
+
+------MultipartBoundary--sKXEcwbjUaU9RjDBgqxdjay6nTdp8dg6NCQJIkEg4u----
+Content-Type: image/gif
+Content-Transfer-Encoding: base64
+Content-Location: http://geotiff.maptools.org/spec/gifs/clrbar_half.gif
+
+R0lGODlhHgEEAOYAAP///wAADAAAJAAANAAAPgAATAQAXgAAbgAAegAAkAAAnAAArgAAvgAAzgAA
+4AAA9gcA9hMA6hgA5iMA2iQA2i8AzjsAwkYAuEwAslcApmIAnGgAlm4AkHQAinkAhIoAc4oAcpwA
+YpwAYagAVrIAS74AP74AP8oANM4ALuAAHfIADPgABv4JAP0OAP0ZAP0nAP0wAP1BAP1GAP1jAP2A
+AP2FAP2cAP2tAP2zAP2+AP3KAP3gAP3mAP3xAP39AP/+D//+J//+K//+Qf/+U//+X//+df/+h//+
+i//+q//+xf/+1f//5///+QAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACwA
+AAAAHgEEAAYH/4BNgoOCAYYCiAIDi4sEjgWQBQaTBgeWCAcImgmcCQqfCguiCwylDAqoCg6rDg+u
+rw8QEBERErYTExQVuxYWF78YGBkZGhobGxwcHR0eHx8g0CEhIiIjIyTYJdon3CjeKeApKior5eUs
+LS0u6y/tMO8wMfIxMjMxM/j5NPv8NTU2Nv4BvEHwBo4cOXQo1LGjYUMePHpI7OGD4o+LQID8yJgx
+iBCPQoQMGTmEiMkiKFMaWWnkiEskMGMiSUKzppKbSpboXMKkp8+fQIMKZUKIkKEAiRQxGuCIQCRJ
+lCxlyrSpE6hQo0ydSsWqFSxXsmjZkoBLFy9fwIQRM4ZMGTNn0P9ASKNmChsJbSW4nfCGIpw4cuZW
+oFPHzh28efTs5dPHb58/gAJtFDSIcCFDhzsgTqRoEaNGjkA8ghRJ0iSRlCpZujwiM2ZNmzh38hxK
+uzbRooIEIE3KqOlTqJOkUu3ESYGnBVhFaW1wyoEqVl/BzqpFloL1Cr16pVVbrO2yDs6eRaNbN1sJ
+E9369hX3N/CKdIRdtHsBLx49GfcWM+4XGeBAgwdVptAOl2UWkUQ+JOjDRZ51FARIo5V2EmoosWQE
+Eqyx1tprSeB0005MzMYEACSWaOKJKJqI21GJDKBUb49AQkklwlVFHCijkGJKKs9BF10s042Viy7Z
+oRXMMGt59xZLXHJNQ55d2qC3l1/suXdOOuvIZ1gM9slQj374NOZYZP/cIBmACCVkmUMQHajgggxm
+tFFoooVE2kimnZaahRi25hpsHsoGVIqEFhoIACH/C01BQ0dDb24gBAMQMQAAAAFXcml0dGVuIGJ5
+IEdJRkNvbnZlcnRlciAyLjMuNyBvZiBKYW4gMjksIDE5OTQAOw==
+
+------MultipartBoundary--sKXEcwbjUaU9RjDBgqxdjay6nTdp8dg6NCQJIkEg4u------

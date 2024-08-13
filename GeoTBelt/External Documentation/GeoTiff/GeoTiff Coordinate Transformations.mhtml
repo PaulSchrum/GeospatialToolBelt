@@ -1,0 +1,609 @@
+From: <Saved by Blink>
+Snapshot-Content-Location: http://geotiff.maptools.org/spec/geotiff2.6.html
+Subject: 
+Date: Tue, 13 Aug 2024 14:24:43 -0400
+MIME-Version: 1.0
+Content-Type: multipart/related;
+	type="text/html";
+	boundary="----MultipartBoundary--oVdwXZVuByKYCoheWxgEwZZ6Kg1CLnApQqkn6AiU8q----"
+
+
+------MultipartBoundary--oVdwXZVuByKYCoheWxgEwZZ6Kg1CLnApQqkn6AiU8q----
+Content-Type: text/html
+Content-ID: <frame-1E7D93BB13E6FE562CB764707939C075@mhtml.blink>
+Content-Transfer-Encoding: quoted-printable
+Content-Location: http://geotiff.maptools.org/spec/geotiff2.6.html
+
+<html><head><meta http-equiv=3D"Content-Type" content=3D"text/html; charset=
+=3Dwindows-1252"></head><body><h2><!-- Geotiff converted by Niles --><tt> <=
+/tt> <a href=3D"http://geotiff.maptools.org/spec/geotiffhome.html"><img src=
+=3D"http://geotiff.maptools.org/spec/gifs/geotiff.gif" alt=3D"GeoTIFF Web P=
+age"></a> <a href=3D"http://geotiff.maptools.org/spec/contents.html"><img s=
+rc=3D"http://geotiff.maptools.org/spec/gifs/table.gif" alt=3D"Table of Cont=
+ents"></a> <a href=3D"http://geotiff.maptools.org/spec/geotiff2.html"><img =
+src=3D"http://geotiff.maptools.org/spec/gifs/sec2.gif" alt=3D"Top of Sectio=
+n 2"></a></h2>
+<img src=3D"http://geotiff.maptools.org/spec/gifs/clrbar_half.gif">
+ <h3><a name=3D"2.6">2.6 Coordinate Transformations</a></h3>
+<tt>The purpose of Geotiff is to allow the definitive identification of
+georeferenced locations within a raster dataset. This is generally accompli=
+shed
+through tying raster space coordinates to a model space coordinate system, =
+when
+no further information is required. In the GeoTIFF nomenclature,
+"georeferencing" refers to tying raster space to a model space M, while
+"geocoding" refers to defining how the model space M assigns coordinates to
+points on the earth.<p>
+The three tags defined below may be used for defining the relationship betw=
+een
+R and M, and the relationship may be diagrammed as:</p></tt><p><tt>
+</tt>
+</p><pre>           ModelPixelScaleTag=20
+           ModelTiepointTag        =20
+    R  ------------ OR --------------&gt; M
+  (I,J,K)  ModelTransformationTag   (X,Y,Z)=20
+                  </pre><tt><p>
+The next section describes these Baseline georeferencing tags in detail.</p=
+><p>
+</p></tt><p><tt>
+ </tt>
+<img src=3D"http://geotiff.maptools.org/spec/gifs/clrbar_half.gif">
+ </p><h4><a name=3D"2.6.1">2.6.1 GeoTIFF Tags for Coordinate Transformation=
+s</a></h4>
+<tt>For most common applications, the transformation between raster and mod=
+el
+space may be defined with a set of raster-to-model tiepoints and scaling
+parameters. The following two tags may be used for this purpose:</tt><p><tt=
+>
+</tt>
+</p><pre>ModelTiepointTag:
+      Tag =3D 33922 (8482.H)=20
+      Type =3D DOUBLE (IEEE Double precision)
+      N =3D 6*K,  K =3D number of tiepoints
+      Alias: GeoreferenceTag
+      Owner: Intergraph</pre><tt><p>
+This tag stores raster-&gt;model tiepoint pairs in the order </p></tt><p><t=
+t>
+</tt>
+</p><pre>        ModelTiepointTag =3D (...,I,J,K, X,Y,Z...),</pre><tt><p>
+where (I,J,K) is the point at location (I,J) in raster space with pixel-val=
+ue
+K, and (X,Y,Z) is a vector in model space. In most cases the model space is
+only two-dimensional, in which case both K and Z should be set to zero; thi=
+s
+third dimension is provided in anticipation of future support for 3D digita=
+l
+elevation models and vertical coordinate systems. </p><p>
+</p><p>
+A raster image may be georeferenced simply by specifying its location, size=
+ and
+orientation in the model coordinate space M. This may be done by specifying=
+ the
+location of three of the four bounding corner points. However, tiepoints ar=
+e
+only to be considered exact at the points specified; thus defining such a s=
+et
+of bounding tiepoints does <b>not</b> imply that the model space locations =
+of
+the interior of the image may be exactly computed by a linear interpolation=
+ of
+these tiepoints.</p><p>
+</p><p>
+However, since the relationship between the Raster space and the model spac=
+e
+will often be an exact, affine transformation, this relationship can be def=
+ined
+using one set of tiepoints and the "ModelPixelScaleTag", described below, w=
+hich
+gives the vertical and horizontal raster grid cell size, specified in model
+units. </p><p>
+</p><p>
+If possible, the first tiepoint placed in this tag shall be the one
+establishing the location of the point (0,0) in raster space. However, if t=
+his
+is not possible (for example, if (0,0) is goes to a part of model space in
+which the projection is ill-defined), then there is no particular order in
+which the tiepoints need be listed.</p><p>
+</p><p>
+For orthorectification or mosaicking applications a large number of tiepoin=
+ts
+may be specified on a mesh over the raster image. However, the definition o=
+f
+associated grid interpolation methods is not in the scope of the current
+GeoTIFF spec.</p><p>
+</p><p>
+Remark: As mentioned in  <a href=3D"http://geotiff.maptools.org/spec/geotif=
+f2.5.html#2.5.1">section 2.5.1</a>, all GeoTIFF information is independent
+of the XPosition, YPosition, and Orientation tags of the standard TIFF 6.0
+spec.</p><p>
+</p></tt><p><tt>
+The next two tags are optional tags provided for defining exact affine
+transformations between raster and model space; baseline GeoTIFF files may =
+use
+either, but shall never use both within the same TIFF image directory.</tt>
+</p><pre>ModelPixelScaleTag:
+      Tag =3D 33550
+      Type =3D DOUBLE (IEEE Double precision)
+      N =3D 3
+      Owner: SoftDesk</pre><tt><p>
+This tag may be used to specify the size of raster pixel spacing in the mod=
+el
+space units, when the raster space can be embedded in the model space
+coordinate system without rotation, and consists of the following 3 values:=
+</p></tt><p><tt>
+</tt>
+</p><pre>    ModelPixelScaleTag =3D (ScaleX, ScaleY, ScaleZ)</pre><tt>
+   <p>
+where ScaleX and ScaleY give the horizontal and vertical spacing of raster
+pixels. The ScaleZ is primarily used to map the pixel value of a digital
+elevation model into the correct Z-scale, and so for most other purposes th=
+is
+value should be zero (since most model spaces are 2-D, with Z=3D0).</p><p>
+</p><p>
+A single tiepoint in the ModelTiepointTag, together with this tag, complete=
+ly
+determine the relationship between raster and model space; thus they compri=
+se
+the two tags which Baseline GeoTIFF files most often will use to place a ra=
+ster
+image into a "standard position" in model space.</p><p>
+</p><p>
+Like the Tiepoint tag, this tag information is independent of the XPosition=
+,
+YPosition, Resolution and Orientation tags of the standard TIFF 6.0 spec.
+However, simple reversals of orientation between raster and model space (e.=
+g.
+horizontal or vertical flips) may be indicated by reversal of sign in the
+corresponding component of the ModelPixelScaleTag. GeoTIFF compliant reader=
+s
+must honor this sign-reversal convention.</p><p>
+</p><p>
+This tag must not be used if the raster image requires rotation or shearing=
+ to
+place it into the standard model space. In such cases the transformation sh=
+all
+be defined with the more general ModelTransformationTag, defined below. </p=
+></tt><p><tt>
+</tt>
+</p><pre>ModelTransformationTag
+      Tag  =3D  34264  (85D8.H)=20
+      Type =3D  DOUBLE   =20
+      N    =3D  16
+      Owner: JPL Cartographic Applications Group</pre><tt><p>
+This tag may be used to specify the transformation matrix between the raste=
+r
+space (and its dependent pixel-value space) and the (possibly 3D) model spa=
+ce.
+If specified, the tag shall have the following organization:</p></tt><p><tt=
+>
+</tt>
+</p><pre>      ModelTransformationTag =3D (a,b,c,d,e....m,n,o,p).</pre><tt>=
+</tt><p><tt>
+where</tt>
+</p><pre>        model                              image
+        coords =3D          matrix     *     coords</pre><tt>
+       </tt>
+<pre>        |-   -|     |-                 -|  |-   -|
+        |  X  |     |   a   b   c   d   |  |  I  |
+        |     |     |                   |  |     |
+        |  Y  |     |   e   f   g   h   |  |  J  |
+        |     |  =3D  |                   |  |     |
+        |  Z  |     |   i   j   k   l   |  |  K  |
+        |     |     |                   |  |     |
+        |  1  |     |   m   n   o   p   |  |  1  |
+        |-   -|     |-                 -|  |-   -|</pre><tt><p>
+</p><p>
+By convention, and without loss of generality, the following parameters are
+currently hard-coded and will always be the same (but must be specified
+nonetheless):</p></tt><p><tt>
+</tt>
+</p><pre>       m =3D n =3D o =3D 0,  p =3D 1.</pre><tt><p>
+For Baseline GeoTIFF, the model space is always 2-D, and so the matrix will
+have the more limited form:</p></tt><p><tt>
+</tt>
+</p><pre>        |-   -|     |-                 -|  |-   -|
+        |  X  |     |   a   b   0   d   |  |  I  |
+        |     |     |                   |  |     |
+        |  Y  |     |   e   f   0   h   |  |  J  |
+        |     |  =3D  |                   |  |     |
+        |  Z  |     |   0   0   0   0   |  |  K  |
+        |     |     |                   |  |     |
+        |  1  |     |   0   0   0   1   |  |  1  |
+        |-   -|     |-                 -|  |-   -|</pre><tt><p>
+ </p><p>
+Values "d" and "h" will often be used to represent translations in  X and Y=
+,
+and so will not necessarily be zero. All 16 values should be specified, in =
+all
+cases. Only the raster-to-model transformation is defined; if the inverse
+transformation is required it must be computed by the client, to the desire=
+d
+accuracy.</p><p>
+</p><p>
+This matrix tag should not be used if the ModelTiepointTag and the
+ModelPixelScaleTag are already defined. If only a single tiepoint (I,J,K,X,=
+Y,Z)
+is specified, and the ModelPixelScale =3D (Sx, Sy, Sz) is specified, then t=
+he
+corresponding transformation matrix may be computed from them as:</p></tt><=
+p><tt>
+</tt>
+</p><pre>        |-                         -|=20
+        |   Sx    0.0   0.0   Tx    |=20
+        |                           |      Tx =3D X - I*Sx
+        |   0.0  -Sy    0.0   Ty    |      Ty =3D Y + J*Sy
+        |                           |      Tz =3D Z - K*Sz
+        |   0.0   0.0   Sz    Tz    |=20
+        |                           |=20
+        |   0.0   0.0   0.0   1.0   |=20
+        |-                         -| </pre><tt><p>
+where the -Sy is due the reversal of direction from J increasing- down in
+raster space to Y increasing-up in model space.</p><p>
+Like the Tiepoint tag, this tag information is independent of the XPosition=
+,
+YPosition, and Orientation tags of the standard TIFF 6.0 spec.</p><p>
+</p></tt><p><tt>
+Note: In Revision 0.2 and earlier, another tag was used for this matrix, wh=
+ich
+has been renamed as follows:</tt>
+</p><pre>IntergraphMatrixTag
+      Tag  =3D  33920  (8480.H)=20
+      Type =3D  DOUBLE   =20
+      N    =3D  17 (Intergraph implementation) or 16 (GeoTIFF 0.2 impl.)
+      Owner: Intergraph</pre><tt><p>
+This tag conflicts with an internal software implementation at Intergraph, =
+and
+so its use is no longer encouraged. A GeoTIFF reader should look first for =
+the
+new tag, and only if it is not found should it check for this older tag. If
+found, it should only consider it to be contain valid GeoTIFF matrix
+information if the tag-count is 16; the Intergraph version uses 17 values.<=
+/p><p>
+</p></tt><p><tt>
+ </tt>
+<img src=3D"http://geotiff.maptools.org/spec/gifs/clrbar_half.gif">
+ </p><h4><a name=3D"2.6.2">2.6.2 Coordinate Transformation Data Flow</a></h=
+4>
+<tt></tt>
+<pre>The dataflow of the various GeoTIFF parameter datasets is based upon t=
+he EPSG/POSC configuration. Here is the text of the description accompanyin=
+g the EPSG parameter tables:
+The data files (.CSV) have a hierarchical structure:
+=20
+ +---------------------------+   +----------------------------+
+ |           VERTCS          |   |           PROJCS           |
+ +---------------------------+   +----------------------------+
+ |Vertical Coordinate Systems|   |Projected Coordinate Systems|
+ +-------------+-------------+   +------------+---------------+
+               |                              |
+      +--------+                              |
+      |                                       |
+      |            +--------------------------+
+      |            |                          |
+      |            |            +-------------+---------------+
+      |            |            |            GEOGCS           |
+      |            |            +-----------------------------+
+      |            |            |Geographic Coordinate Systems|
+      |            |            |Geocentric Coordinate Systems|
+      |            |            +-----------------------------+
+      |            |            |       Geodetic Datums       |
+      |            |            +-------------+---------------+
+      |            |                          |
+      |            |                 +--------+-------+
+      |            |                 |                |   =20
+      |     +------+-----+    +------+-----+   +------+-------+
+      |     |    PROJ    |    |   ELLIPS   |   |    PMERID    |
+      |     +------------+    +------------+   +--------------+
+      |     | Projection |    | Ellipsoid  |   |Prime Meridian|
+      |     | Parameters |    | Parameters |   |  Parameters  |
+      |     +------+-----+    +------+-----+   +------+-------+
+      |            |                 |                |
+      +------------+-----------+-----+----------------+        =20
+                               |                         =20
+                 +-------------+------------+
+                 |           UNITS          |
+                 +--------------------------+
+                 | Linear and Angular Units |
+                 +--------------------------+
+=20
+=20
+ The parameter listings are "living documents" and will be
+ updated by the EPSG from time to time. Any comment or
+ suggestions for improvements should be directed to:
+=20
+   Jean-Patrick Girbig,      or   Roger Lott,
+   Manager Cartography,           Head of Survey,
+   Petroconsultants S.A.,         BP Exploration,
+   PO Box 152,                    Uxbridge One,
+   24 Chemin de la Marie,         Harefield Road,
+   1258 Perly-Geneva,             Uxbridge,
+   Switzerland.                   Middlesex UB8 1PD,
+                                  England.
+                                =20
+                                  Internet:
+                                   lottrj@txpcap.hou.xwh.bp.com
+=20
+ Requests for the inclusion of new data should include supporting=20
+ documentation.  Requests for changing existing data should include=20
+ reference to both the name and code of the item.
+ </pre><tt>
+</tt><p><tt>
+ </tt>
+<img src=3D"http://geotiff.maptools.org/spec/gifs/clrbar_half.gif">
+ </p><h4><a name=3D"2.6.3">2.6.3 Cookbook for Defining Transformations</a><=
+/h4>
+<pre>Here is a 4-step guide to producing a set of Baseline GeoTIFF tags for=
+ defining coordinate transformation information of a raster dataset.=20
+ =20
+  Step 1: Establish the Raster Space coordinate system used:=20
+          RasterPixelIsArea or RasterPixelIsPoint.
+ =20
+  Step 2: Establish/define the model space Type in which the image is
+          to be georeferenced. Usually this will be a Projected=20
+          Coordinate system (PCS). If you are geocoding this data
+          set, then the model space is defined to be the corresponding
+          geographic, geocentric or Projected coordinate system (skip=20
+          to the "Cookbook"  <a href=3D"http://geotiff.maptools.org/spec/ge=
+otiff2.7.html#2.7.3">section 2.7.3</a> first to do determine this).
+         =20
+  Step 3: Identify the nature of the transformations needed to tie
+          the raster data down to the model space coordinate system:
+         =20
+     Case 1: The model-location of a raster point (x,y) is known, but not
+          the scale or orientations:
+    =20
+            Use the ModelTiepointTag to define the (X,Y,Z) coordinates
+            of the known raster point.
+    =20
+    =20
+     Case 2: The location of three non-collinear raster points are known
+          exactly, but the linearity of the transformation is not known.
+        =20
+          Use the ModelTiepointTag to define the (X,Y,Z) coordinates
+          of all three known raster points. Do not compute or define the=20
+          ModelPixelScale or ModelTransformation tag.
+        =20
+     Case 3: The position and scale of the data is known exactly, and
+          no rotation or shearing is needed to fit into the model space.
+         =20
+          Use the ModelTiepointTag to define the (X,Y,Z) coordinates
+          of the known raster point, and the ModelPixelScaleTag to
+          specify the scale.
+         =20
+     Case 4: The raster data requires rotation and/or lateral shearing to
+          fit into the defined model space:
+         =20
+          Use the ModelTransformation matrix to define the transformation.
+         =20
+     Case 5: The raster data cannot be fit into the model space with a
+          simple affine transformation (rubber-sheeting required).
+         =20
+          Use only the ModelTiepoint tag, and specify as many
+          tiepoints as your application requires. Note, however, that
+          this is not a Baseline GeoTIFF implementation, and should
+          not be used for interchange; it is recommended that the image be
+          geometrically rectified first, and put into a standard projected
+          coordinate system.
+   Step 4: Install the defined tag values in the TIFF file and close it.</p=
+re><tt></tt><p><tt>
+ </tt>
+
+</p></body></html>
+------MultipartBoundary--oVdwXZVuByKYCoheWxgEwZZ6Kg1CLnApQqkn6AiU8q----
+Content-Type: image/gif
+Content-Transfer-Encoding: base64
+Content-Location: http://geotiff.maptools.org/spec/gifs/geotiff.gif
+
+R0lGODdhmQArAPcAAP///87Ozr29vaWlpTk5ORgYGM7Gxs7Gvdb3CMbnCL3eEMbnEKXGGK3WGL3n
+GK3WEK3WIZzGGKXOGJS9IZS9GIy1IZzOIZzOGJTGIZTGKXulIYS1IXulKYS1KXutKXOlIYS9KWuc
+KYTGMXOtKWucMXOtMWOUMVqEMWulMVqMKXO1MWulOWutOXO9OVqUMWutQlKEMWu1QlqcOVKMOVKU
+OUp7OVqlQkJ7MVKUQlqtSkJ7OUqUQkKEQjlzOUqcSkKMSjlzQjl7QjF7Qjl7SjFrQkKUWjGESjFj
+QjF7SilrQjGEUiljQilzSjGMWilrSjGEWil7UjGUYzlKQilzUiFaQil7WiFjShhaQhhjSgAYECl7
+YxhrUiFaShhzWiFjUhhjUhhrWgApIRhzYxhSShBKQhBSSghKQgA5MRBaUghjWhh7cwhrY6Wtra29
+vaW9vSljYyFaWiFjYyFraxhaWhBSUhBaWghCQghKSghSUghaWghjYwhrawBjYwBaWgBSUgBKSgBC
+QgA5OQAxMQApKQAhIQAQEAAICABzewBrcwhjawBjawBaYwBSWhhjayGltRBSWghKUghSWgCElABK
+UgBCSlK9ziFaYxhSWhBKUghCSgCctQB7jABzhABrewBjcwA5QgAxOUJrc1K1xkqltSGlvQiUrQCU
+rQCMpQBaawApMWOtvTGtxgCUtQB7lABzjABSYwBKWkKtxghKWgBrhABjewBCUgAhKQhCUqW1vQAQ
+GAAIEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACwAAAAAmQArAAAI/wABCGiD
+y03BgwYTIlyosCHDhw4jQpwosSLFixYzYsTFZgCAjwAOqCK1qqTJkyhTqlzJsqXLlzBjypyp0lGj
+AiBDxjJ1ypTPn0CDCh1KtKjRo0iTKl3KFGhPSaB2Sd0VUtQpToeyat3KtavXr2DDih1LtqzZs1s5
+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
+
+------MultipartBoundary--oVdwXZVuByKYCoheWxgEwZZ6Kg1CLnApQqkn6AiU8q----
+Content-Type: image/gif
+Content-Transfer-Encoding: base64
+Content-Location: http://geotiff.maptools.org/spec/gifs/table.gif
+
+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
+
+------MultipartBoundary--oVdwXZVuByKYCoheWxgEwZZ6Kg1CLnApQqkn6AiU8q----
+Content-Type: image/gif
+Content-Transfer-Encoding: base64
+Content-Location: http://geotiff.maptools.org/spec/gifs/sec2.gif
+
+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
+
+------MultipartBoundary--oVdwXZVuByKYCoheWxgEwZZ6Kg1CLnApQqkn6AiU8q----
+Content-Type: image/gif
+Content-Transfer-Encoding: base64
+Content-Location: http://geotiff.maptools.org/spec/gifs/clrbar_half.gif
+
+R0lGODlhHgEEAOYAAP///wAADAAAJAAANAAAPgAATAQAXgAAbgAAegAAkAAAnAAArgAAvgAAzgAA
+4AAA9gcA9hMA6hgA5iMA2iQA2i8AzjsAwkYAuEwAslcApmIAnGgAlm4AkHQAinkAhIoAc4oAcpwA
+YpwAYagAVrIAS74AP74AP8oANM4ALuAAHfIADPgABv4JAP0OAP0ZAP0nAP0wAP1BAP1GAP1jAP2A
+AP2FAP2cAP2tAP2zAP2+AP3KAP3gAP3mAP3xAP39AP/+D//+J//+K//+Qf/+U//+X//+df/+h//+
+i//+q//+xf/+1f//5///+QAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACwA
+AAAAHgEEAAYH/4BNgoOCAYYCiAIDi4sEjgWQBQaTBgeWCAcImgmcCQqfCguiCwylDAqoCg6rDg+u
+rw8QEBERErYTExQVuxYWF78YGBkZGhobGxwcHR0eHx8g0CEhIiIjIyTYJdon3CjeKeApKior5eUs
+LS0u6y/tMO8wMfIxMjMxM/j5NPv8NTU2Nv4BvEHwBo4cOXQo1LGjYUMePHpI7OGD4o+LQID8yJgx
+iBCPQoQMGTmEiMkiKFMaWWnkiEskMGMiSUKzppKbSpboXMKkp8+fQIMKZUKIkKEAiRQxGuCIQCRJ
+lCxlyrSpE6hQo0ydSsWqFSxXsmjZkoBLFy9fwIQRM4ZMGTNn0P9ASKNmChsJbSW4nfCGIpw4cuZW
+oFPHzh28efTs5dPHb58/gAJtFDSIcCFDhzsgTqRoEaNGjkA8ghRJ0iSRlCpZujwiM2ZNmzh38hxK
+uzbRooIEIE3KqOlTqJOkUu3ESYGnBVhFaW1wyoEqVl/BzqpFloL1Cr16pVVbrO2yDs6eRaNbN1sJ
+E9369hX3N/CKdIRdtHsBLx49GfcWM+4XGeBAgwdVptAOl2UWkUQ+JOjDRZ51FARIo5V2EmoosWQE
+Eqyx1tprSeB0005MzMYEACSWaOKJKJqI21GJDKBUb49AQkklwlVFHCijkGJKKs9BF10s042Viy7Z
+oRXMMGt59xZLXHJNQ55d2qC3l1/suXdOOuvIZ1gM9slQj374NOZYZP/cIBmACCVkmUMQHajgggxm
+tFFoooVE2kimnZaahRi25hpsHsoGVIqEFhoIACH/C01BQ0dDb24gBAMQMQAAAAFXcml0dGVuIGJ5
+IEdJRkNvbnZlcnRlciAyLjMuNyBvZiBKYW4gMjksIDE5OTQAOw==
+
+------MultipartBoundary--oVdwXZVuByKYCoheWxgEwZZ6Kg1CLnApQqkn6AiU8q------
