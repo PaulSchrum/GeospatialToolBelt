@@ -3,6 +3,7 @@ using GeoTBelt.Grid;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Reflection;
 using System.Runtime.InteropServices;
 
 
@@ -80,7 +81,8 @@ namespace GeoTBelt.GeoTiff
         //TiffTag.GEOTIFFPHOTOMETRICINTERPRETATIONTAG;   // 33922
         //TiffTag.GEOTIFFGEOGRAPHICTYPEGEOKEY;  // 34737
 
-        public static GeoTiffRaster<T> ReadGeoTiff<T>(string fileToOpen)
+        public static GeoTiffRaster<T> ReadGeoTiff<T>(string fileToOpen,
+            bool SuppressTypeMismatchExceptions = true)
             where T : struct
         {
             GeoTiffRaster<T> returnRaster = null;
@@ -161,6 +163,19 @@ namespace GeoTBelt.GeoTiff
                 returnRaster.CellDataType = determineType
                     (returnRaster.SampleFormat, returnRaster.BitsPerSample);
 
+                Type targetType = typeof(T);
+                if(!SuppressTypeMismatchExceptions)
+                {
+                    if (returnRaster.CellDataType != targetType)
+                    {
+                        StringBuilder messageSB = new StringBuilder();
+                        messageSB.Append("The type of the raster, ");
+                        messageSB.Append($"{returnRaster.CellDataType}, is different ");
+                        messageSB.Append($"than the requested type, {typeof(T)}.");
+                        throw new ArrayTypeMismatchException(messageSB.ToString());
+                    }
+                }
+
                 returnRaster.Compression =
                     (short?)tags.GetNullable("Compression");
 
@@ -232,7 +247,9 @@ namespace GeoTBelt.GeoTiff
                                 (position - dataFramePositionIdx) < bytesToRead; 
                                 position+=bytesPerValue)
                             {
-                                T receiver = ConvertFromByteArrayTo<T>(buf, position-dataFramePositionIdx);
+                                T receiver = 
+                                    ConvertFromByteArrayTo<T>(buf, 
+                                    position-dataFramePositionIdx, returnRaster.CellDataType);
                                 returnRaster.DataFrame[position/bytesPerValue] = receiver;
                             }
                             dataFramePositionIdx += bytesToRead;
@@ -279,20 +296,80 @@ namespace GeoTBelt.GeoTiff
             return returnRaster;
         }
 
-        public static T ConvertFromByteArrayTo<T>(byte[] buffer, int startIndex) 
-            where T : struct
+        public static Type GetRasterCellType(string path)
         {
+            using (Tiff tifData = Tiff.Open(path, "r"))
+            {
+                if (tifData == null) throw new Exception("Could not open file.");
 
-            var theSize = Marshal.SizeOf<T>();
-            ReadOnlySpan<byte> span = new ReadOnlySpan<byte>(buffer, startIndex, theSize);
+                var tags = GetAllTags(tifData);
+                int? sampleFormat = (short?)tags.GetNullable("SampleFormat");
+                int? bitsPerSampe = (short?)tags.GetNullable("BitsPerSample");
 
-            return MemoryMarshal.Read<T>(span);
+                return determineType(sampleFormat, bitsPerSampe);
+            }
+            return null;
+        }
 
-            //var theSize = Marshal.SizeOf(typeof(T));
-            //ReadOnlySpan<byte> span = 
-            //    new ReadOnlySpan<byte>(buffer, startIndex, Marshal.SizeOf<T>());
+        public static T ConvertFromByteArrayTo<T>(byte[] buffer, int startIndex, Type Rtype)
+        where T : struct
+        {
+            int bufferCellSize = Marshal.SizeOf(Rtype);
+            ReadOnlySpan<byte> span = new ReadOnlySpan<byte>(buffer, startIndex, bufferCellSize);
+            T returnValue = default(T);
 
-            //return MemoryMarshal.Read<T>(span);
+            if (Rtype == typeof(byte))
+            {
+                byte byteStore = MemoryMarshal.Read<byte>(span);
+                returnValue = (T)Convert.ChangeType(byteStore, typeof(T));
+            }
+            else if (Rtype == typeof(sbyte))
+            {
+                sbyte sbyteStore = MemoryMarshal.Read<sbyte>(span);
+                returnValue = (T)Convert.ChangeType(sbyteStore, typeof(T));
+            }
+            else if (Rtype == typeof(short))
+            {
+                short shortStore = MemoryMarshal.Read<short>(span);
+                returnValue = (T)Convert.ChangeType(shortStore, typeof(T));
+            }
+            else if (Rtype == typeof(ushort))
+            {
+                ushort ushortStore = MemoryMarshal.Read<ushort>(span);
+                returnValue = (T)Convert.ChangeType(ushortStore, typeof(T));
+            }
+            else if (Rtype == typeof(int))
+            {
+                int intStore = MemoryMarshal.Read<int>(span);
+                returnValue = (T)Convert.ChangeType(intStore, typeof(T));
+            }
+            else if (Rtype == typeof(uint))
+            {
+                uint uintStore = MemoryMarshal.Read<uint>(span);
+                returnValue = (T)Convert.ChangeType(uintStore, typeof(T));
+            }
+            else if (Rtype == typeof(long))
+            {
+                long longStore = MemoryMarshal.Read<long>(span);
+                returnValue = (T)Convert.ChangeType(longStore, typeof(T));
+            }
+            else if (Rtype == typeof(ulong))
+            {
+                ulong ulongStore = MemoryMarshal.Read<ulong>(span);
+                returnValue = (T)Convert.ChangeType(ulongStore, typeof(T));
+            }
+            else if (Rtype == typeof(float))
+            {
+                float floatStore = MemoryMarshal.Read<float>(span);
+                returnValue = (T)Convert.ChangeType(floatStore, typeof(T));
+            }
+            else if (Rtype == typeof(double))
+            {
+                double doubleStore = MemoryMarshal.Read<double>(span);
+                returnValue = (T)Convert.ChangeType(doubleStore, typeof(T));
+            }
+
+            return returnValue;
         }
 
 

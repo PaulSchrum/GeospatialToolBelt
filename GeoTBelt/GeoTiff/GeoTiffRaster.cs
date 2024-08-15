@@ -178,4 +178,12 @@ namespace GeoTBelt.GeoTiff
             return returnRaster;
         }
     }
+
+    public static class GeoTiffTools
+    {
+        public static Type GetRasterCellType(string path)
+        {
+            return GeoTiffHelper.GetRasterCellType(path);
+        }
+    }
 }

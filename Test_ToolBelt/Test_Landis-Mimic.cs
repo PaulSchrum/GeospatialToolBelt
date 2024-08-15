@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using GeoTBelt;
 using GeoTBelt.GeoTiff;
 using Landis_Mimic;
+using BitMiracle.LibTiff.Classic;
 
 namespace Test_ToolBelt
 {
@@ -18,19 +19,21 @@ namespace Test_ToolBelt
         private static string geoTiffFileName_singleBand;
         private static string path;
 
+
+        private static string improvedGetCurrentDirectory(string desiredDirectory)
+        {
+            var currDirList = Directory.GetCurrentDirectory().Split('\\').ToList();
+            while (currDirList.Last() != desiredDirectory)
+            {
+                currDirList.RemoveAt(currDirList.Count - 1);
+            }
+            currDirList.Add("Data");
+            return string.Join("\\", currDirList);
+        }
+
         [ClassInitialize]
         public static void Initialize(TestContext context)
         {
-            static string improvedGetCurrentDirectory(string desiredDirectory)
-            {
-                var currDirList = Directory.GetCurrentDirectory().Split('\\').ToList();
-                while (currDirList.Last() != desiredDirectory)
-                {
-                    currDirList.RemoveAt(currDirList.Count - 1);
-                }
-                currDirList.Add("Data");
-                return string.Join("\\", currDirList);
-            }
             currentDirectory = improvedGetCurrentDirectory("Test_ToolBelt");
 
             geoTiffFileName_singleBand = "TestData_00765413_uncompressed.tif";
@@ -71,6 +74,73 @@ namespace Test_ToolBelt
                 actualValue = inMemoryTargetArray[640000-20];
                 Assert.AreEqual(expected: 5042.647, actual: actualValue, delta: 0.01);
             }
+        }
+
+        [TestMethod]
+        public void GeoTiff_GetCellType_Succeeds()
+        {
+            if (currentDirectory is null)
+                currentDirectory = improvedGetCurrentDirectory("Test_ToolBelt");
+
+            var rasterFileName = "Landis\\Bug01\\ecoregions.tif";
+            string localPath = Path.Combine(currentDirectory, rasterFileName);
+
+            Assert.IsTrue(File.Exists(localPath));
+
+            Type theRasterType = GeoTiffTools.GetRasterCellType(localPath);
+            Type expectedType = typeof(byte);
+            Assert.AreEqual(expected: expectedType, actual: theRasterType);
+        }
+
+        [TestMethod]
+        public void ReadGeoTiff_BugReadingByteRaster_Landis01()
+        {
+            if(currentDirectory is null)
+                currentDirectory = improvedGetCurrentDirectory("Test_ToolBelt");
+
+            var Bug01TestPath = "Landis\\Bug01\\ecoregions.tif";
+            string localPath = Path.Combine(currentDirectory, Bug01TestPath);
+
+            Assert.IsTrue(File.Exists(localPath));
+
+            IInputRaster<byte> mapBug01 = default(IInputRaster<byte>);
+            mapBug01 = RasterFactory.OpenRaster<byte>(localPath);
+
+            Assert.IsNotNull(mapBug01);
+
+            for (int i = 0; i < 4; i++)
+            {
+                byte asByte = mapBug01.ReadBufferPixel();
+                byte ab = mapBug01.BufferPixel;
+            }
+
+            mapBug01.Dispose(); mapBug01 = null;
+
+            IInputRaster<int> mapBug0int = default(IInputRaster<int>);
+            mapBug0int = RasterFactory.OpenRaster<int>(localPath); // Bug was here.
+
+            Assert.IsNotNull(mapBug0int);
+
+            for (int i = 0; i < 4; i++)
+            {
+                int asInt = mapBug0int.ReadBufferPixel();
+                int ai = mapBug0int.BufferPixel;
+            }
+
+            mapBug0int.Dispose(); mapBug0int = null;
+
+            bool ExceptionWasThrown = false;
+            IInputRaster<int> secondCheck = default(IInputRaster<int>);
+            try 
+            {
+                secondCheck = RasterFactory.OpenRaster<int>(localPath,
+                    SuppressTypeMismatchExceptions: false);
+            }
+            catch (Exception ex) 
+            { 
+                ExceptionWasThrown = true;
+            }
+            Assert.IsTrue(ExceptionWasThrown);
         }
 
         [TestMethod]

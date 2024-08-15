@@ -99,7 +99,9 @@ namespace GeoTBelt
         /// <param name="format"></param>
         /// <returns></returns>
         /// <exception cref="ArgumentException"></exception>
-        public static Raster<T> Load(string fullPath, string format = "")
+        public static Raster<T> Load(string fullPath, 
+            bool SuppressTypeMismatchExceptions = true,
+            string format = "")
         {
             string fileType = format;
             if (string.IsNullOrEmpty(fileType))
@@ -121,7 +123,8 @@ namespace GeoTBelt
             else if (considerGeoTiff(fileType))
             {
                 //throw new NotImplementedException("GeoTiff");
-                returnRaster = GeoTiffHelper.ReadGeoTiff<T>(fullPath);
+                returnRaster = GeoTiffHelper.ReadGeoTiff<T>(fullPath,
+                    SuppressTypeMismatchExceptions);
                 //.populateRasterFromTiffFile(fullPath);
             }
             else
