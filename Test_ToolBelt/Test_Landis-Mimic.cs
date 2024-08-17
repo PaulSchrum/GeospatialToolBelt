@@ -127,20 +127,6 @@ namespace Test_ToolBelt
                 int ai = mapBug0int.BufferPixel;
             }
 
-            mapBug0int.Dispose(); mapBug0int = null;
-
-            bool ExceptionWasThrown = false;
-            IInputRaster<int> secondCheck = default(IInputRaster<int>);
-            try 
-            {
-                secondCheck = RasterFactory.OpenRaster<int>(localPath,
-                    SuppressTypeMismatchExceptions: false);
-            }
-            catch (Exception ex) 
-            { 
-                ExceptionWasThrown = true;
-            }
-            Assert.IsTrue(ExceptionWasThrown);
         }
 
         [TestMethod]

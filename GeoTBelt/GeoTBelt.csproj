@@ -5,12 +5,13 @@
     <ImplicitUsings>disable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <LangVersion>9.0</LangVersion> <!-- Explicitly specifying C# 9.0 -->
-    <Version>0.1.2</Version>
+    <Version>0.1.3</Version>
     <Authors>Paul Schrum</Authors>
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
     <Description>Geospatial Toolbelt for Landis</Description>
     <PackageTags></PackageTags>
     <RepositoryUrl>https://github.com/PaulSchrum/GeospatialToolBelt</RepositoryUrl>
+    <Title>Geospatial Toolbelt</Title>
   </PropertyGroup>
 
   <ItemGroup>

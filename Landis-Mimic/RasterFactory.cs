@@ -19,13 +19,11 @@ namespace Landis_Mimic
         /// thrown when there is a type mismatch between the raster cell type
         /// and the paramter T.</param>
         /// <returns></returns>
-        public static IInputRaster<T> OpenRaster<T>(
-            string path, bool SuppressTypeMismatchExceptions=true) 
+        public static IInputRaster<T> OpenRaster<T>(string path) 
             where T : struct
         {
 
-            var localRaster = (GeoTiffRaster<T>)Raster<T>
-                .Load(path, SuppressTypeMismatchExceptions);
+            var localRaster = (GeoTiffRaster<T>)Raster<T>.Load(path);
 
             LandisRaster<T> workingRaster = new LandisRaster<T>();
             workingRaster.theRaster = localRaster;

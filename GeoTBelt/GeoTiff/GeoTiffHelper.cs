@@ -81,8 +81,7 @@ namespace GeoTBelt.GeoTiff
         //TiffTag.GEOTIFFPHOTOMETRICINTERPRETATIONTAG;   // 33922
         //TiffTag.GEOTIFFGEOGRAPHICTYPEGEOKEY;  // 34737
 
-        public static GeoTiffRaster<T> ReadGeoTiff<T>(string fileToOpen,
-            bool SuppressTypeMismatchExceptions = true)
+        public static GeoTiffRaster<T> ReadGeoTiff<T>(string fileToOpen)
             where T : struct
         {
             GeoTiffRaster<T> returnRaster = null;
@@ -164,17 +163,7 @@ namespace GeoTBelt.GeoTiff
                     (returnRaster.SampleFormat, returnRaster.BitsPerSample);
 
                 Type targetType = typeof(T);
-                if(!SuppressTypeMismatchExceptions)
-                {
-                    if (returnRaster.CellDataType != targetType)
-                    {
-                        StringBuilder messageSB = new StringBuilder();
-                        messageSB.Append("The type of the raster, ");
-                        messageSB.Append($"{returnRaster.CellDataType}, is different ");
-                        messageSB.Append($"than the requested type, {typeof(T)}.");
-                        throw new ArrayTypeMismatchException(messageSB.ToString());
-                    }
-                }
+                validateTypeCompatibilty(returnRaster.CellDataType, targetType);
 
                 returnRaster.Compression =
                     (short?)tags.GetNullable("Compression");
@@ -294,6 +283,126 @@ namespace GeoTBelt.GeoTiff
                 }
 
             return returnRaster;
+        }
+
+        /// <summary>
+        /// Throws an exception if the type being cast from would potentially
+        /// lose data because of the type being cast to.
+        /// </summary>
+        /// <param name="castFromVariableType"></param>
+        /// <param name="targetType"></param>
+        /// <exception cref="ArrayTypeMismatchException"></exception>
+        private static void validateTypeCompatibilty(
+            Type castFromVariableType, Type targetType)
+        {
+            bool shouldThrowException = false;
+            if (castFromVariableType == typeof(byte))
+            {
+                if (targetType == typeof(sbyte))
+                    shouldThrowException = true;
+            }
+            else if (castFromVariableType == typeof(sbyte))
+            {
+                if (targetType == typeof(byte))
+                    shouldThrowException = true;
+            }
+            else if (castFromVariableType == typeof(short))
+            {
+                if (targetType == typeof(byte) ||
+                    targetType == typeof(sbyte) ||
+                    targetType == typeof(ushort))
+
+                    shouldThrowException = true;
+            }
+            else if (castFromVariableType == typeof(ushort))
+            {
+                if (targetType == typeof(byte) ||
+                    targetType == typeof(sbyte) ||
+                    targetType == typeof(short))
+                    
+                    shouldThrowException = true;
+            }
+            else if (castFromVariableType == typeof(int))
+            {
+                if (targetType == typeof(byte) ||
+                    targetType == typeof(sbyte) ||
+                    targetType == typeof(short) ||
+                    targetType == typeof(ushort) ||
+                    targetType == typeof(uint))
+
+                    shouldThrowException = true;
+            }
+            else if (castFromVariableType == typeof(uint))
+            {
+                if (targetType == typeof(byte) ||
+                    targetType == typeof(sbyte) ||
+                    targetType == typeof(short) ||
+                    targetType == typeof(ushort) ||
+                    targetType == typeof(int))
+
+                    shouldThrowException = true;
+            }
+            else if (castFromVariableType == typeof(long))
+            {
+                if (targetType == typeof(byte) ||
+                    targetType == typeof(sbyte) ||
+                    targetType == typeof(short) ||
+                    targetType == typeof(ushort) ||
+                    targetType == typeof(int) ||
+                    targetType == typeof(uint) ||
+                    targetType == typeof(ulong))
+
+                    shouldThrowException = true;
+            }
+            else if (castFromVariableType == typeof(ulong))
+            {
+                if (targetType == typeof(byte) ||
+                    targetType == typeof(sbyte) ||
+                    targetType == typeof(short) ||
+                    targetType == typeof(ushort) ||
+                    targetType == typeof(int) ||
+                    targetType == typeof(uint) ||
+                    targetType == typeof(long))
+
+                    shouldThrowException = true;
+            }
+            else if (castFromVariableType == typeof(float))
+            {
+                if (targetType == typeof(byte) ||
+                    targetType == typeof(sbyte) ||
+                    targetType == typeof(short) ||
+                    targetType == typeof(ushort) ||
+                    targetType == typeof(int) ||
+                    targetType == typeof(uint) ||
+                    targetType == typeof(long) ||
+                    targetType == typeof(ulong))
+
+                    shouldThrowException = true;
+            }
+            else if (castFromVariableType == typeof(double))
+            {
+                if (targetType == typeof(byte) ||
+                    targetType == typeof(sbyte) ||
+                    targetType == typeof(short) ||
+                    targetType == typeof(ushort) ||
+                    targetType == typeof(int) ||
+                    targetType == typeof(uint) ||
+                    targetType == typeof(long) ||
+                    targetType == typeof(ulong) ||
+                    targetType == typeof(float))
+
+                    shouldThrowException = true;
+            }
+
+            if (shouldThrowException)
+            {
+                StringBuilder messageSB = new StringBuilder();
+                messageSB.Append("The type of the raster, ");
+                messageSB.Append($"{castFromVariableType}, is different ");
+                messageSB.Append($"than the requested type, {targetType}.");
+                throw new ArrayTypeMismatchException(messageSB.ToString());
+            }
+
         }
 
         public static Type GetRasterCellType(string path)
